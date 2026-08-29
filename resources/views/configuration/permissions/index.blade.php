@@ -1,0 +1,1 @@
+@extends('layouts.app') @section('title','Permissions') @section('content')<div class="card"><table class="table mb-0"><thead><tr><th>Code</th><th>Name</th></tr></thead><tbody>@foreach($rows as $r)<tr><td>{{ $r->code }}</td><td>{{ $r->name }}</td></tr>@endforeach</tbody></table></div>@endsection

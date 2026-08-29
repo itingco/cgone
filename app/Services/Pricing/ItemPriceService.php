@@ -1,0 +1,13 @@
+<?php
+namespace App\Services\Pricing;
+use App\Models\{Customer,Item,Location,LocationBin,PriceLevel,Uom};
+use App\Models\Pricing\ItemPrice;
+use Carbon\CarbonInterface;
+use DomainException;
+class ItemPriceService {
+ public function assertEligible(Item $item): void {if(!$item->is_active)throw new DomainException("Item {$item->code} is inactive.");if($item->is_discontinued)throw new DomainException("Item {$item->code} is discontinued.");if($item->price_hold)throw new DomainException("Item {$item->code} is locked: price approval pending.");}
+ public function customerPriceLevel(Customer $customer,?int $requested=null): ?PriceLevel {if($requested){$level=PriceLevel::whereKey($requested)->where('is_active',true)->first();if(!$level)throw new DomainException('Invalid Price Level.');if(!$customer->multi_price_level && (int)$customer->default_price_level_id!==$level->id)throw new DomainException('Customer is not allowed to use this Price Level.');return $level;}return $customer->defaultPriceLevel()->where('is_active',true)->first() ?: PriceLevel::where('is_active',true)->orderBy('sort_order')->first();}
+ public function effectivePrice(Item $item,PriceLevel $level,Uom $uom,CarbonInterface|string $date): ItemPrice {return ItemPrice::query()->where('item_id',$item->id)->where('price_level_id',$level->id)->where('uom_id',$uom->id)->where('is_active',true)->whereDate('effective_from','<=',$date)->where(fn($q)=>$q->whereNull('effective_to')->orWhereDate('effective_to','>=',$date))->orderByDesc('effective_from')->orderByDesc('id')->first() ?: throw new DomainException("No approved effective price for {$item->code} / {$level->code} / {$uom->code}.");}
+ public function sequential(float $list,float $locationPct,float $binPct,float $manualPct): array {$net=$list;foreach([$locationPct,$binPct,$manualPct] as $pct)$net*=(1-$pct/100);return ['list_unit_price'=>round($list,4),'location_discount_pct'=>$locationPct,'bin_discount_pct'=>$binPct,'manual_discount_pct'=>$manualPct,'discount_formula'=>implode(' + ',array_map(fn($v)=>rtrim(rtrim(number_format($v,4,'.',''),'0'),'.').'%',[$locationPct,$binPct,$manualPct])),'net_unit_price'=>round($net,4),'discount_amount'=>round($list-$net,4)];}
+ public function discountContext(?Location $location,?LocationBin $bin,float $manual=0): array {if($location?->bin_mandatory && !$bin)throw new DomainException("Location {$location->code} requires a bin.");if($bin && (int)$bin->location_id!==(int)$location?->id)throw new DomainException('Selected bin does not belong to selected location.');return [(float)($location?->additional_discount_pct??0),(float)($bin?->additional_discount_pct??0),$manual];}
+}

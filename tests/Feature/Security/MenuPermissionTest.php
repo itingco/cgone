@@ -1,0 +1,3 @@
+<?php
+namespace Tests\Feature\Security; use App\Models\User; use Illuminate\Foundation\Testing\RefreshDatabase; use Tests\Support\PermissionHelper; use Tests\TestCase;
+class MenuPermissionTest extends TestCase { use RefreshDatabase,PermissionHelper; public function test_user_without_menu_permission_receives_403(): void {$user=User::factory()->create();$this->actingAs($user)->get('/master/items')->assertForbidden();} public function test_user_with_view_permission_can_open_items(): void {$user=$this->userWithPermission('master.items','view');$this->actingAs($user)->get('/master/items')->assertOk();} }

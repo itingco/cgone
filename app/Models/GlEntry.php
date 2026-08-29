@@ -1,0 +1,3 @@
+<?php
+namespace App\Models; use App\Models\Concerns\ImmutableWhenPosted; use Illuminate\Database\Eloquent\Model; use Illuminate\Database\Eloquent\Factories\HasFactory;
+class GlEntry extends Model { use HasFactory,ImmutableWhenPosted; protected $table='gl_entries'; protected $fillable=['gl_batch_id','account_id','debit','credit','description','reversal_of_id','status']; protected $casts=['debit'=>'decimal:4','credit'=>'decimal:4']; public function batch(){return $this->belongsTo(GlBatch::class,'gl_batch_id');} public function account(){return $this->belongsTo(ChartOfAccount::class,'account_id');} }

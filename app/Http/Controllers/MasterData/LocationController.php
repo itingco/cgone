@@ -1,0 +1,11 @@
+<?php
+namespace App\Http\Controllers\MasterData;
+use App\Models\Location;
+use Illuminate\Http\Request;
+class LocationController extends AbstractMasterController {
+ protected string $modelClass=Location::class; protected string $menuCode='inventory.locations'; protected string $title='Locations'; protected array $columns=['code'=>'Code','name'=>'Name','bin_mandatory'=>'Bin Mandatory','additional_discount_pct'=>'Location Discount']; protected array $fields=['code'=>['label'=>'Code','type'=>'text'],'name'=>['label'=>'Name','type'=>'text'],'address'=>['label'=>'Address','type'=>'textarea'],'bin_mandatory'=>['label'=>'Bin Mandatory','type'=>'checkbox'],'additional_discount_pct'=>['label'=>'Additional Discount %','type'=>'number','step'=>'0.0001'],'is_active'=>['label'=>'Active','type'=>'checkbox']];
+ protected function rules(?int $id=null): array{return ['code'=>$this->uniqueCode($id),'name'=>'required|string|max:255','address'=>'nullable|string','bin_mandatory'=>'required|boolean','additional_discount_pct'=>'required|numeric|min:0|max:100','is_active'=>'required|boolean'];}
+ public function show(int $id){$record=Location::with(['bins'=>fn($q)=>$q->orderBy('code')])->findOrFail($id);return view('master.location-show',['record'=>$record,'title'=>$this->title,'fields'=>$this->fields,'routeBase'=>$this->routeBase()]);}
+ public function update(Request $request,int $id,\App\Services\MasterData\MasterChangeService $service){$record=Location::findOrFail($id);abort_if($record->is_system,422,'System Location cannot be edited.');return parent::update($request,$id,$service);} public function status(Request $request,int $id,\App\Services\MasterData\MasterChangeService $service){abort_if(Location::findOrFail($id)->is_system,422,'System Location cannot be disabled.');return parent::status($request,$id,$service);}
+ protected function dataViewFields(): array{return ['code'=>['label'=>'Code','type'=>'text','column'=>'code'],'name'=>['label'=>'Name','type'=>'text','column'=>'name'],'bin_mandatory'=>['label'=>'Bin Mandatory','type'=>'boolean','column'=>'bin_mandatory'],'additional_discount_pct'=>['label'=>'Additional Discount %','type'=>'number','column'=>'additional_discount_pct'],'is_system'=>['label'=>'System','type'=>'boolean','column'=>'is_system'],'is_active'=>['label'=>'Active','type'=>'boolean','column'=>'is_active']];}
+}

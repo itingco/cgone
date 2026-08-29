@@ -1,0 +1,33 @@
+CGOne ERP V4 Optimization Overlay
+=================================
+NEW
+- app/Http/Controllers/DashboardSettingsController.php
+- app/Http/Controllers/ProfileController.php
+- app/Models/DashboardPreference.php
+- app/Services/Dashboard/DashboardWidgetService.php
+- database/migrations/2026_08_28_100000_create_v4_erp_optimization.php
+- database/seeders/DistributorTechnicalToolsCoaSeeder.php
+- database/templates/coa_distributor_alat_teknik.csv
+- database/templates/README.md
+- resources/views/dashboard-settings.blade.php
+- resources/views/profile/password.blade.php
+- tests/Contracts/v4_erp_optimization_contract.py
+- docs/V4_DEPLOYMENT.md
+- docs/V4_VERIFICATION.md
+
+UPDATED
+- routes/web.php
+- app/Http/Controllers/DashboardController.php
+- app/Http/Controllers/MasterData/AbstractMasterController.php
+- app/Http/Controllers/MasterData/ItemController.php
+- app/Http/Controllers/MasterData/CustomerController.php
+- app/Http/Controllers/MasterData/VendorController.php
+- app/Http/Controllers/Configuration/UserController.php
+- app/Models/User.php
+- resources/views/layouts/app.blade.php
+- resources/views/dashboard.blade.php
+- resources/views/master/index.blade.php
+- resources/views/master/show.blade.php
+- resources/views/data-views/panel.blade.php
+- resources/views/configuration/users/form.blade.php
+- database/seeders/DatabaseSeeder.php

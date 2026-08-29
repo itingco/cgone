@@ -1,0 +1,3 @@
+<?php
+namespace Tests\Feature\MasterData; use App\Models\Uom; use Illuminate\Foundation\Testing\RefreshDatabase; use Tests\Support\PermissionHelper; use Tests\TestCase;
+class ItemCrudTest extends TestCase { use RefreshDatabase,PermissionHelper; public function test_authorized_user_can_create_item(): void {$uom=Uom::factory()->create();$user=$this->userWithPermission('master.items','create');$this->actingAs($user)->post('/master/items',['code'=>'ITEM-001','name'=>'Test Item','item_type'=>'INVENTORY','base_uom_id'=>$uom->id,'is_active'=>1])->assertRedirect();$this->assertDatabaseHas('items',['code'=>'ITEM-001']);$this->assertDatabaseHas('activity_logs',['module'=>'master.items','action'=>'create']);} }

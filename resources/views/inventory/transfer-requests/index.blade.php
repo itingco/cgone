@@ -1,0 +1,7 @@
+@extends('layouts.app')
+@section('title','Goods Transfer Requests')
+@section('content')
+<div class="d-flex justify-content-between mb-3"><h4>Goods Transfer Requests</h4><a class="btn btn-primary" href="{{ route('goods-transfer-requests.create') }}">New Request</a></div>
+<form class="card card-body mb-3"><div class="row g-2"><div class="col-md-4"><input class="form-control" name="q" value="{{ request('q') }}" placeholder="Document no"></div><div class="col-md-3"><select class="form-select" name="status"><option value="">All status</option>@foreach(['OPEN','RELEASED','APPROVED','REJECTED'] as $s)<option @selected(request('status')===$s)>{{ $s }}</option>@endforeach</select></div><div class="col-md-2"><button class="btn btn-outline-secondary">Filter</button></div></div></form>
+<div class="card"><table class="table mb-0"><thead><tr><th>No</th><th>Date</th><th>Source</th><th>Destination</th><th>Status</th></tr></thead><tbody>@forelse($rows as $r)<tr><td><a href="{{ route('goods-transfer-requests.show',$r) }}">{{ $r->document_no }}</a></td><td>{{ $r->document_date }}</td><td>{{ $r->sourceLocation?->code }}</td><td>{{ $r->destinationLocation?->code }}</td><td><span class="status-badge status-{{ $r->status }}">{{ $r->status }}</span></td></tr>@empty<tr><td colspan="5" class="text-center text-muted">No data</td></tr>@endforelse</tbody></table></div><div class="mt-3">{{ $rows->links() }}</div>
+@endsection

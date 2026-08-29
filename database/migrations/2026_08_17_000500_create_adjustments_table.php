@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void {Schema::create('adjustments', function(Blueprint $t){$t->id();$t->string('document_number',120)->unique();$t->string('ledger_type',30);$t->unsignedBigInteger('source_entry_id');$t->unsignedBigInteger('reversal_entry_id');$t->text('reason');$t->foreignId('requested_by')->constrained('users');$t->foreignId('approved_by')->nullable()->constrained('users');$t->dateTime('posted_at');$t->timestamps();$t->unique(['ledger_type','source_entry_id'],'adjustment_source_unique');});} public function down(): void {Schema::dropIfExists('adjustments');} };

@@ -1,0 +1,73 @@
+services:
+  app:
+    build: .
+    container_name: retail_erp_app
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - retail_erp_vendor:/var/www/html/vendor
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: retail_erp_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: retail_erp_postgres
+    environment:
+      POSTGRES_DB: retail_erp
+      POSTGRES_USER: erp
+      POSTGRES_PASSWORD: erp_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - retail_erp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U erp -d retail_erp"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: retail_erp_redis
+    ports:
+      - "6379:6379"
+
+  queue:
+    build: .
+    container_name: retail_erp_queue
+    command: php artisan queue:work --sleep=2 --tries=3 --timeout=120
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - retail_erp_vendor:/var/www/html/vendor
+    depends_on:
+      - app
+
+  scheduler:
+    build: .
+    container_name: retail_erp_scheduler
+    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - retail_erp_vendor:/var/www/html/vendor
+    depends_on:
+      - app
+
+volumes:
+  retail_erp_pgdata:
+  retail_erp_vendor:

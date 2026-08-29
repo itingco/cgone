@@ -1,0 +1,3 @@
+<?php
+namespace Tests\Feature\System; use App\Models\DocumentSequence; use App\Services\System\DocumentSequenceService; use Illuminate\Foundation\Testing\RefreshDatabase; use Tests\TestCase;
+class DocumentSequenceTest extends TestCase { use RefreshDatabase; public function test_sequence_generates_unique_document_numbers(): void {DocumentSequence::create(['code'=>'ADJ','prefix'=>'ADJ','date_format'=>'ymd','separator'=>'/','padding'=>4,'reset_period'=>'daily','is_active'=>true]);$service=app(DocumentSequenceService::class);$first=$service->next('ADJ');$second=$service->next('ADJ');$this->assertNotSame($first,$second);$this->assertStringEndsWith('/0001',$first);$this->assertStringEndsWith('/0002',$second);} }

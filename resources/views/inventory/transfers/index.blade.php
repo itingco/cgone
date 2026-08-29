@@ -1,0 +1,3 @@
+@extends('layouts.app')
+@section('title','Goods Transfers')
+@section('content')<h4 class="mb-3">Goods Transfers</h4><div class="card"><table class="table mb-0"><thead><tr><th>No</th><th>Date</th><th>Source</th><th>Destination</th><th>Status</th></tr></thead><tbody>@forelse($rows as $r)<tr><td><a href="{{ route('goods-transfers.show',$r) }}">{{ $r->document_no }}</a></td><td>{{ $r->document_date }}</td><td>{{ $r->sourceLocation?->code }}</td><td>{{ $r->destinationLocation?->code }}</td><td><span class="status-badge status-{{ $r->status }}">{{ $r->status }}</span></td></tr>@empty<tr><td colspan="5" class="text-center text-muted">No data</td></tr>@endforelse</tbody></table></div><div class="mt-3">{{ $rows->links() }}</div>@endsection

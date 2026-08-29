@@ -1,0 +1,4 @@
+<?php
+namespace App\Models\Documents;
+use Illuminate\Database\Eloquent\Model;
+class PostedPurchaseInvoice extends Model { protected $table='posted_purchase_invoices'; protected $guarded=[]; protected $casts=['document_date'=>'date','posted_at'=>'datetime','subtotal'=>'decimal:4','discount_total'=>'decimal:4','tax_total'=>'decimal:4','grand_total'=>'decimal:4']; public function lines(){return $this->hasMany(PostedPurchaseInvoiceLine::class,'posted_purchase_invoice_id');} public function vendor(){return $this->belongsTo(\App\Models\Vendor::class,'vendor_id');} public function source(){return $this->belongsTo(PurchaseInvoice::class,'source_purchase_invoice_id');} public function glBatch(){return $this->belongsTo(\App\Models\GlBatch::class);} public function undo(){return $this->hasOne(PostedDocumentUndo::class,'posted_id')->where('posted_type','PostedPurchaseInvoice');} public function effectiveStatus(): string { return $this->undo()->exists()?'UNDO':'POSTED'; } }

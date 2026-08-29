@@ -1,0 +1,3 @@
+<?php
+namespace Tests\Support; use App\Models\{Menu,Permission,Role,RoleMenuPermission,User};
+trait PermissionHelper { protected function userWithPermission(string $menuCode,string $permissionCode): User { $user=User::factory()->create();$role=Role::create(['code'=>'R'.uniqid(),'name'=>'Test Role','is_active'=>true]);$menu=Menu::firstOrCreate(['code'=>$menuCode],['label'=>$menuCode,'is_active'=>true]);$permission=Permission::firstOrCreate(['code'=>$permissionCode],['name'=>ucfirst($permissionCode)]);$user->roles()->attach($role);RoleMenuPermission::create(['role_id'=>$role->id,'menu_id'=>$menu->id,'permission_id'=>$permission->id]);return $user; } }

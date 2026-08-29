@@ -1,0 +1,4 @@
+<?php
+namespace Tests\Feature\Audit;
+use App\Models\{Item,Uom}; use Illuminate\Foundation\Testing\RefreshDatabase; use Tests\Support\PermissionHelper; use Tests\TestCase;
+class ActivityLogTest extends TestCase { use RefreshDatabase,PermissionHelper; public function test_master_update_records_before_and_after_values(): void {$uom=Uom::factory()->create();$item=Item::factory()->create(['base_uom_id'=>$uom->id,'name'=>'Old Name']);$user=$this->userWithPermission('master.items','edit');$this->actingAs($user)->put('/master/items/'.$item->id,['code'=>$item->code,'name'=>'New Name','item_type'=>'INVENTORY','base_uom_id'=>$uom->id,'is_active'=>1])->assertRedirect();$log=\App\Models\ActivityLog::where('module','master.items')->where('action','update')->latest('id')->firstOrFail();$this->assertStringContainsString('Old Name',(string)$log->before_data);$this->assertStringContainsString('New Name',(string)$log->after_data);} }

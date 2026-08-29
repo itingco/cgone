@@ -1,0 +1,9 @@
+@extends('layouts.app') @section('title','Dashboard') @section('content')
+<div class="mb-3"><h4 class="mb-1">ERP Control Center</h4><div class="text-muted">Operational, receivable, payable, and posting overview.</div></div>
+<div class="row g-3 mb-4">@foreach([
+ ['sales_today','Sales Today','Rp'],['open_sales_orders','Open Sales Orders',''],['pending_shipments','Sales Orders Ready',''],['ar_outstanding','AR Outstanding','Rp'],
+ ['purchase_today','Purchases Today','Rp'],['open_purchase_orders','Open Purchase Orders',''],['pending_receipts','Purchase Orders Ready',''],['ap_outstanding','AP Outstanding','Rp']
+] as [$key,$label,$prefix])<div class="col-md-6 col-xl-3"><div class="card card-stat h-100"><div class="card-body"><div class="text-muted small">{{ $label }}</div><div class="fs-4 fw-bold mt-1">{{ $prefix }}{{ number_format((float)$cards[$key],$prefix?2:0,',','.') }}</div></div></div></div>@endforeach</div>
+@if(count($warnings))<div class="card mb-4"><div class="card-header bg-white"><strong>Needs Attention</strong></div><div class="list-group list-group-flush">@foreach($warnings as $warning)<div class="list-group-item border-0 border-top"><span class="text-warning me-2">⚠</span>{{ $warning }}</div>@endforeach</div></div>@endif
+<div class="card"><div class="card-header bg-white"><strong>Recent Activity</strong></div><div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>Time</th><th>User</th><th>Module</th><th>Action</th><th>Document</th></tr></thead><tbody>@forelse($activities as $a)<tr><td>{{ $a->created_at }}</td><td>{{ $a->user?->name ?? '-' }}</td><td>{{ $a->module }}</td><td>{{ $a->action }}</td><td>{{ $a->document_number ?? '-' }}</td></tr>@empty<tr><td colspan="5" class="text-center text-muted py-4">No activity</td></tr>@endforelse</tbody></table></div></div>
+@endsection
