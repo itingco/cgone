@@ -4,7 +4,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h4 class="mb-0">General Ledger</h4>
-        <div class="small text-muted">GL batches and entries are immutable after posting.</div>
+        <div class="small text-muted">GL batches and entries are immutable after posting. Business Unit mengikuti konteks BU aktif saat posting.</div>
     </div>
 </div>
 
@@ -12,21 +12,28 @@
 
 @foreach($rows as $batch)
 <div class="card mb-3">
-    <div class="card-header d-flex justify-content-between">
+    <div class="card-header d-flex justify-content-between gap-3">
         <div>
-            <strong>#{{ $batch->id }} {{ $batch->document_number }}</strong> — {{ $batch->posting_at }}
-            <div class="small text-muted">{{ $batch->description }}</div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <strong>#{{ $batch->id }} {{ $batch->document_number }}</strong>
+                <span class="text-muted">— {{ $batch->posting_at }}</span>
+                <span class="badge text-bg-light border">
+                    BU: {{ $batch->businessUnit?->code ?? '-' }}{{ $batch->businessUnit?->name ? ' - '.$batch->businessUnit->name : '' }}
+                </span>
+            </div>
+            <div class="small text-muted mt-1">{{ $batch->description }}</div>
         </div>
         @if($canReverse && !$batch->reversal_of_id)
-            <a class="btn btn-sm btn-outline-danger" href="{{ route('adjustments.create',['ledger_type'=>'gl','source_entry_id'=>$batch->id]) }}">Reverse Batch</a>
+            <a class="btn btn-sm btn-outline-danger align-self-start" href="{{ route('adjustments.create',['ledger_type'=>'gl','source_entry_id'=>$batch->id]) }}">Reverse Batch</a>
         @endif
     </div>
     <div class="table-responsive">
-        <table class="table table-sm mb-0">
-            <thead><tr><th>Account</th><th>Description</th><th class="text-end">Debit</th><th class="text-end">Credit</th></tr></thead>
+        <table class="table table-sm mb-0 align-middle">
+            <thead><tr><th>Business Unit</th><th>Account</th><th>Description</th><th class="text-end">Debit</th><th class="text-end">Credit</th></tr></thead>
             <tbody>
             @foreach($batch->entries as $line)
                 <tr>
+                    <td class="text-nowrap">{{ $batch->businessUnit?->code ?? '-' }}</td>
                     <td>{{ $line->account?->code }} - {{ $line->account?->name }}</td>
                     <td>{{ $line->description }}</td>
                     <td class="text-end">{{ number_format((float)$line->debit,4) }}</td>

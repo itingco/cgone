@@ -102,6 +102,8 @@ class LedgerController extends Controller
         $fields = [
             'posting_at' => ['label' => 'Posting', 'type' => 'date', 'column' => 'posting_at'],
             'document_number' => ['label' => 'Document', 'type' => 'text', 'column' => 'document_number'],
+            'business_unit' => ['label' => 'Business Unit', 'type' => 'lookup', 'relation' => 'businessUnit', 'column' => 'name'],
+            'business_unit_code' => ['label' => 'BU Code', 'type' => 'lookup', 'relation' => 'businessUnit', 'column' => 'code'],
             'source_module' => ['label' => 'Source', 'type' => 'text', 'column' => 'source_module'],
             'document_type' => ['label' => 'Document Type', 'type' => 'text', 'column' => 'document_type'],
             'status' => ['label' => 'Status', 'type' => 'text', 'column' => 'status'],
@@ -110,10 +112,11 @@ class LedgerController extends Controller
         $state = $views->resolve($request, 'ledger.gl', $fields, $fields);
         $query = GlBatch::query()
             ->select([
-                'id', 'posting_at', 'document_number', 'source_module', 'document_type',
+                'id', 'business_unit_id', 'posting_at', 'document_number', 'source_module', 'document_type',
                 'status', 'description', 'reversal_of_id',
             ])
             ->with([
+                'businessUnit:id,code,name',
                 'entries:id,gl_batch_id,account_id,debit,credit,description',
                 'entries.account:id,code,name',
             ]);

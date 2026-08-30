@@ -3,11 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title','ERP') - CGOne ERP</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-:root{--side:#101d2e;--side2:#16263b;--accent:#ff9f1c;--bg:#f5f7fb;--text:#1d2b3d}body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.sidebar{width:292px;min-height:100vh;background:linear-gradient(180deg,var(--side),#0b1725);color:#fff;position:sticky;top:0;height:100vh;overflow-y:auto}.sidebar-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem;padding:.3rem .55rem 1rem}.brand-dot{width:34px;height:34px;border-radius:10px;background:var(--accent);display:grid;place-items:center;color:#111;font-size:.72rem}.sidebar-search-wrap{position:relative;margin-bottom:.7rem}.sidebar-search{width:100%;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.06);color:white;border-radius:10px;padding:.65rem .75rem .65rem 2rem;font-size:.84rem}.sidebar-search::placeholder{color:#8290a2}.search-icon{position:absolute;left:.7rem;top:.62rem;color:#8090a3}.nav-group{border-top:1px solid rgba(255,255,255,.05);padding-top:.35rem;margin-top:.35rem}.nav-group-btn{width:100%;border:0;background:transparent;color:#91a0b2;display:flex;align-items:center;justify-content:space-between;padding:.65rem .55rem;font-size:.72rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.nav-group-btn .chev{transition:.2s}.nav-group.open .chev{transform:rotate(180deg)}.nav-group-body{display:none}.nav-group.open .nav-group-body{display:block}.menu-link{color:#d3dce7;text-decoration:none;display:flex;gap:.65rem;align-items:center;padding:.55rem .65rem;border-radius:9px;font-size:.88rem;margin:1px 0}.menu-link:hover,.menu-link.active{background:rgba(255,255,255,.09);color:#fff}.menu-dot{width:7px;height:7px;border-radius:50%;background:#53677f}.menu-link.active .menu-dot{background:var(--accent)}.show-more-area{display:none}.nav-group.more-open .show-more-area{display:block}.show-more{border:0;background:transparent;color:#8495aa;font-size:.78rem;padding:.45rem .65rem}.show-more:hover{color:#fff}.sidebar-empty{display:none;color:#8190a3;font-size:.82rem;padding:1rem .5rem}.content{min-width:0}.topbar{min-height:66px}.card{border:0;border-radius:14px;box-shadow:0 .12rem .6rem rgba(24,39,60,.06)}.card-stat{border:0;box-shadow:0 .1rem .35rem rgba(0,0,0,.07)}.status-badge{font-size:.72rem;font-weight:800;letter-spacing:.04em;padding:.4rem .55rem;border-radius:999px}.status-OPEN{background:#edf2f7;color:#42566f}.status-RELEASED,.status-APPROVED{background:#fff2d9;color:#926000}.status-POSTED,.status-RECEIVED{background:#dcf6e7;color:#1c6b42}.status-SHIPPED{background:#e3edff;color:#24569a}.status-UNDO,.status-REJECTED{background:#fde3e3;color:#9a2c2c}@media print{.sidebar,.topbar,.btn,.modal{display:none!important}.content{width:100%!important}.p-4{padding:0!important}.card{box-shadow:none!important;border:1px solid #ddd!important}}@media(max-width:900px){.sidebar{width:82px}.sidebar-brand span,.sidebar-search-wrap,.nav-group-btn span:first-child,.menu-link span,.show-more{display:none}.menu-link{justify-content:center}.content{width:calc(100% - 82px)}}
+:root{--side:#101d2e;--side2:#16263b;--accent:#ff9f1c;--bg:#f5f7fb;--text:#1d2b3d}body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.sidebar{width:292px;min-height:100vh;background:linear-gradient(180deg,var(--side),#0b1725);color:#fff;position:sticky;top:0;height:100vh;overflow-y:auto}.sidebar-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem;padding:.3rem .55rem .75rem}.brand-dot{width:34px;height:34px;border-radius:10px;background:var(--accent);display:grid;place-items:center;color:#111;font-size:.72rem}.context-box{margin:0 0 .85rem;padding:.7rem;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);border-radius:12px}.context-row+.context-row{margin-top:.65rem}.context-label{display:flex;align-items:center;justify-content:space-between;color:#91a0b2;font-size:.64rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;margin:0 0 .3rem}.context-label .active-dot{width:7px;height:7px;border-radius:50%;background:#35c978;box-shadow:0 0 0 3px rgba(53,201,120,.12)}.context-select{width:100%;border:1px solid rgba(255,255,255,.12);background:#0d1928;color:#edf4fb;border-radius:9px;padding:.48rem .55rem;font-size:.79rem;outline:none}.context-select:focus{border-color:rgba(255,159,28,.65);box-shadow:0 0 0 .15rem rgba(255,159,28,.1)}.context-hint{color:#6f8298;font-size:.67rem;margin-top:.35rem;line-height:1.35}.sidebar-search-wrap{position:relative;margin-bottom:.7rem}.sidebar-search{width:100%;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.06);color:white;border-radius:10px;padding:.65rem .75rem .65rem 2rem;font-size:.84rem}.sidebar-search::placeholder{color:#8290a2}.search-icon{position:absolute;left:.7rem;top:.62rem;color:#8090a3}.nav-group{border-top:1px solid rgba(255,255,255,.05);padding-top:.35rem;margin-top:.35rem}.nav-group-btn{width:100%;border:0;background:transparent;color:#91a0b2;display:flex;align-items:center;justify-content:space-between;padding:.65rem .55rem;font-size:.72rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.nav-group-btn .chev{transition:.2s}.nav-group.open .chev{transform:rotate(180deg)}.nav-group-body{display:none}.nav-group.open .nav-group-body{display:block}.menu-link{color:#d3dce7;text-decoration:none;display:flex;gap:.65rem;align-items:center;padding:.55rem .65rem;border-radius:9px;font-size:.88rem;margin:1px 0}.menu-link:hover,.menu-link.active{background:rgba(255,255,255,.09);color:#fff}.menu-dot{width:7px;height:7px;border-radius:50%;background:#53677f}.menu-link.active .menu-dot{background:var(--accent)}.show-more-area{display:none}.nav-group.more-open .show-more-area{display:block}.show-more{border:0;background:transparent;color:#8495aa;font-size:.78rem;padding:.45rem .65rem}.show-more:hover{color:#fff}.sidebar-empty{display:none;color:#8190a3;font-size:.82rem;padding:1rem .5rem}.content{min-width:0}.app-shell .sidebar{transition:margin-left .22s ease,width .22s ease}.app-shell.sidebar-hidden .sidebar{margin-left:-292px}.topbar{min-height:66px}.sidebar-toggle{width:38px;height:38px;border-radius:10px;display:grid;place-items:center}.profile-trigger{border:0;background:transparent;padding:.25rem .35rem;border-radius:10px}.profile-trigger:hover{background:#f1f4f8}.profile-avatar{width:34px;height:34px;border-radius:50%;background:#14243a;color:#fff;display:grid;place-items:center;font-size:.78rem;font-weight:800}.context-manage{display:inline-flex;align-items:center;gap:.3rem;color:#91a0b2;text-decoration:none;font-size:.67rem;margin-top:.45rem}.context-manage:hover{color:#fff}.header-db-context{display:flex;align-items:center;gap:.55rem;padding:.35rem .5rem .35rem .65rem;border:1px solid #e3e8ef;background:#f8fafc;border-radius:11px}.header-db-meta{line-height:1.1}.header-db-label{display:flex;align-items:center;gap:.35rem;font-size:.62rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#7b8796;margin-bottom:.2rem}.header-db-label .active-dot{width:7px;height:7px;border-radius:50%;background:#35c978;box-shadow:0 0 0 3px rgba(53,201,120,.12)}.header-db-select{min-width:190px;max-width:260px;border:0;background:transparent;color:#1d2b3d;font-size:.82rem;font-weight:700;padding:0 1.5rem 0 0;box-shadow:none}.header-db-select:focus{outline:none;box-shadow:none}.header-db-manage{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;color:#5e6b79;text-decoration:none}.header-db-manage:hover{background:#e9eef5;color:#16263b}.header-actions{display:flex;align-items:center;gap:.75rem}@media(max-width:1050px){.header-db-label{display:none}.header-db-context{padding:.45rem .55rem}.header-db-select{min-width:145px;max-width:180px}}@media(max-width:720px){.header-db-context{padding:.35rem .45rem}.header-db-select{min-width:105px;max-width:125px;font-size:.75rem}.header-db-manage{display:none}}.card{border:0;border-radius:14px;box-shadow:0 .12rem .6rem rgba(24,39,60,.06)}.card-stat{border:0;box-shadow:0 .1rem .35rem rgba(0,0,0,.07)}.status-badge{font-size:.72rem;font-weight:800;letter-spacing:.04em;padding:.4rem .55rem;border-radius:999px}.status-OPEN{background:#edf2f7;color:#42566f}.status-RELEASED,.status-APPROVED{background:#fff2d9;color:#926000}.status-POSTED,.status-RECEIVED{background:#dcf6e7;color:#1c6b42}.status-SHIPPED{background:#e3edff;color:#24569a}.status-UNDO,.status-REJECTED{background:#fde3e3;color:#9a2c2c}@media print{.sidebar,.topbar,.btn,.modal{display:none!important}.content{width:100%!important}.p-4{padding:0!important}.card{box-shadow:none!important;border:1px solid #ddd!important}}@media(max-width:900px){.sidebar{width:82px}.sidebar-brand span,.context-box,.sidebar-search-wrap,.nav-group-btn span:first-child,.menu-link span,.show-more{display:none}.menu-link{justify-content:center}.content{width:calc(100% - 82px)}}
 </style>
 </head>
 <body>
@@ -103,8 +102,8 @@
         'config' => [
             'label' => 'Configuration',
             'primary' => [
-                ['config.departments','Departments',route('config.departments.index')],
                 ['config.users','Users',route('config.users.index')],
+                ['config.settings','Database Manager',route('database.manager.index')],
                 ['config.roles','Roles',route('config.roles.index')],
                 ['config.menu-security','Menu Security',route('config.menu-security.index')],
                 ['config.numbering','Number Series',route('config.numbering.index')],
@@ -124,9 +123,28 @@
         ],
     ];
 @endphp
-<div class="d-flex">
+<div class="d-flex app-shell" id="appShell">
     <aside class="sidebar p-3">
         <div class="sidebar-brand"><div class="brand-dot">CG</div><span>CGOne ERP</span></div>
+
+        @if(isset($erpBusinessUnits) && $erpBusinessUnits->isNotEmpty())
+            <div class="context-box">
+                <div class="context-row">
+                    <div class="context-label"><span>Business Unit</span></div>
+                    <form method="post" action="{{ route('business-unit.switch') }}">
+                        @csrf
+                        <select class="context-select" name="business_unit_id" onchange="this.form.submit()" aria-label="Active business unit">
+                            @foreach($erpBusinessUnits as $businessUnit)
+                                <option value="{{ $businessUnit->id }}" @selected((int)($activeBusinessUnitId ?? 0) === (int)$businessUnit->id)>
+                                    {{ $businessUnit->code }} - {{ $businessUnit->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                </div>
+            </div>
+        @endif
+
         <div class="sidebar-search-wrap"><span class="search-icon">⌕</span><input id="sidebar-search" class="sidebar-search" placeholder="Search menu..." autocomplete="off"></div>
         @if($authz->allows(auth()->user(),'dashboard','view'))
             <a class="menu-link menu-search-item" data-search="dashboard" href="{{ route('dashboard') }}"><i class="menu-dot"></i><span>Dashboard</span></a>
@@ -162,8 +180,47 @@
     </aside>
     <main class="content flex-grow-1">
         <nav class="navbar bg-white border-bottom px-4 topbar">
-            <div><div class="fw-bold">@yield('title','ERP')</div><div class="small text-muted">CGOne ERP</div></div>
-            <div class="dropdown"><button class="btn btn-light border dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="rounded-circle bg-dark text-white d-inline-grid align-items-center justify-content-center" style="width:30px;height:30px">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</span><span class="text-start d-none d-md-inline"><span class="d-block fw-semibold lh-sm">{{ auth()->user()->name }}</span><small class="text-muted">{{ auth()->user()->department?->name ?? 'No Department' }}</small></span></button><ul class="dropdown-menu dropdown-menu-end shadow border-0" style="min-width:280px"><li class="px-3 py-2"><div class="fw-semibold">{{ auth()->user()->name }}</div><div class="small text-muted">{{ auth()->user()->email }}</div><div class="small mt-1"><span class="badge text-bg-light border">{{ auth()->user()->department?->name ?? 'No Department' }}</span></div></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{{ route('profile.show') }}">My Profile</a></li><li><a class="dropdown-item" href="{{ route('profile.password') }}">Change Password</a></li><li><hr class="dropdown-divider"></li><li><form method="post" action="{{ route('logout') }}">@csrf<button class="dropdown-item text-danger">Logout</button></form></li></ul></div>
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-outline-secondary sidebar-toggle" type="button" id="sidebarToggle" title="Show / hide side panel" aria-label="Show or hide side panel">☰</button>
+                <div>
+                    <div class="fw-bold">@yield('title','ERP')</div>
+                    <div class="small text-muted">CGOne ERP</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                @if(isset($erpDatabases) && count($erpDatabases))
+                    <div class="header-db-context" title="Database aktif">
+                        <div class="header-db-meta">
+                            <div class="header-db-label"><i class="active-dot"></i><span>Database</span></div>
+                            <form method="post" action="{{ route('database.switch') }}" class="m-0">
+                                @csrf
+                                <select class="form-select form-select-sm header-db-select" name="database" onchange="this.form.submit()" aria-label="Active database">
+                                    @foreach($erpDatabases as $databaseName => $databaseLabel)
+                                        <option value="{{ $databaseName }}" @selected(($activeErpDatabase ?? null) === $databaseName)>{{ $databaseLabel }}</option>
+                                    @endforeach
+                                </select>
+                            </form>
+                        </div>
+                        @if($authz->allows(auth()->user(),'config.settings','edit'))
+                            <a class="header-db-manage" href="{{ route('database.manager.index') }}" title="Manage / Add Database" aria-label="Manage databases">⚙</a>
+                        @endif
+                    </div>
+                @endif
+
+                <div class="dropdown">
+                    <button class="profile-trigger d-flex align-items-center gap-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="profile-avatar">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</span>
+                        <span class="d-none d-md-block text-start"><span class="d-block small fw-semibold">{{ auth()->user()->name }}</span><span class="d-block text-muted" style="font-size:.7rem">{{ auth()->user()->email }}</span></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                        <li><h6 class="dropdown-header">Account</h6></li>
+                        <li><a class="dropdown-item" href="{{ route('profile.show') }}">Profile & Password</a></li>
+                        <li><a class="dropdown-item" href="{{ route('profile.documents') }}">My Documents</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><form method="post" action="{{ route('logout') }}">@csrf<button class="dropdown-item text-danger" type="submit">Logout</button></form></li>
+                    </ul>
+                </div>
+            </div>
         </nav>
         <div class="p-4">
             @if(session('success'))<div class="alert alert-success border-0">{{ session('success') }}</div>@endif
@@ -174,7 +231,7 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-(()=>{const groups=[...document.querySelectorAll('.nav-group')];document.querySelectorAll('.menu-link').forEach(a=>{try{if(new URL(a.href).pathname===location.pathname){a.classList.add('active');a.closest('.nav-group')?.classList.add('open');}}catch(e){}});groups.forEach(g=>{const key='cgone.nav.'+g.dataset.group;if(localStorage.getItem(key)==='open')g.classList.add('open');g.querySelector('.nav-group-btn')?.addEventListener('click',()=>{g.classList.toggle('open');localStorage.setItem(key,g.classList.contains('open')?'open':'closed')});const more=g.querySelector('.show-more');if(more)more.addEventListener('click',()=>{g.classList.toggle('more-open');more.textContent=g.classList.contains('more-open')?'Show Less':'Show More'});});const search=document.getElementById('sidebar-search'),empty=document.getElementById('sidebar-empty');if(search)search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();let hits=0;document.querySelectorAll('.menu-search-item').forEach(a=>{const ok=!q||a.dataset.search.includes(q);a.style.display=ok?'flex':'none';if(ok&&q){hits++;const g=a.closest('.nav-group');if(g)g.classList.add('open','more-open')}});groups.forEach(g=>{if(!q){g.style.display='block';return;}const any=[...g.querySelectorAll('.menu-search-item')].some(a=>a.style.display!=='none');g.style.display=any?'block':'none'});empty.style.display=q&&hits===0?'block':'none';});})();
+(()=>{const shell=document.getElementById('appShell'),toggle=document.getElementById('sidebarToggle');const sideKey='cgone.sidebar.hidden';if(localStorage.getItem(sideKey)==='1')shell?.classList.add('sidebar-hidden');toggle?.addEventListener('click',()=>{shell?.classList.toggle('sidebar-hidden');localStorage.setItem(sideKey,shell?.classList.contains('sidebar-hidden')?'1':'0')});const groups=[...document.querySelectorAll('.nav-group')];document.querySelectorAll('.menu-link').forEach(a=>{try{if(new URL(a.href).pathname===location.pathname){a.classList.add('active');a.closest('.nav-group')?.classList.add('open');}}catch(e){}});groups.forEach(g=>{const key='cgone.nav.'+g.dataset.group;if(localStorage.getItem(key)==='open')g.classList.add('open');g.querySelector('.nav-group-btn')?.addEventListener('click',()=>{g.classList.toggle('open');localStorage.setItem(key,g.classList.contains('open')?'open':'closed')});const more=g.querySelector('.show-more');if(more)more.addEventListener('click',()=>{g.classList.toggle('more-open');more.textContent=g.classList.contains('more-open')?'Show Less':'Show More'});});const search=document.getElementById('sidebar-search'),empty=document.getElementById('sidebar-empty');if(search)search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();let hits=0;document.querySelectorAll('.menu-search-item').forEach(a=>{const ok=!q||a.dataset.search.includes(q);a.style.display=ok?'flex':'none';if(ok&&q){hits++;const g=a.closest('.nav-group');if(g)g.classList.add('open','more-open')}});groups.forEach(g=>{if(!q){g.style.display='block';return;}const any=[...g.querySelectorAll('.menu-search-item')].some(a=>a.style.display!=='none');g.style.display=any?'block':'none'});empty.style.display=q&&hits===0?'block':'none';});})();
 </script>
 @stack('scripts')
 </body>

@@ -1,0 +1,17 @@
+AS_INGCO SCHEMA REFERENCE
+=========================
+
+The supplied as_ingco.snapshot file was inspected successfully.
+
+Format:
+- SDBDiffExpress / DBDiffExpress schema snapshot
+- Legacy database is SQL Server style (dbo, SQL_Latin1_General_CP1_CI_AS, money, bit, uniqueidentifier, etc.)
+- It is NOT a PostgreSQL backup and must not be restored directly into CGOne.
+
+The snapshot is usable as the authoritative legacy-schema reference for mapping:
+- IC_Items -> CGOne items / item_uoms / posting accounts
+- AR_Customers -> CGOne customers
+- AP_Suppliers -> CGOne vendors
+- AC_Accounts -> CGOne chart_of_accounts
+
+See SNAPSHOT_SCHEMA_ANALYSIS.md for the confirmed important legacy fields and mapping direction.
