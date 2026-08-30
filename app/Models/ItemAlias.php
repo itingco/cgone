@@ -3,14 +3,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ItemUom extends Model
+class ItemAlias extends Model
 {
     protected $guarded = [];
-    protected $casts = [
-        'conversion_qty' => 'decimal:6',
-        'is_sales_uom' => 'boolean',
-        'is_purchase_uom' => 'boolean',
-    ];
+    protected $casts = ['is_active' => 'boolean'];
 
     public function item(){ return $this->belongsTo(Item::class); }
     public function uom(){ return $this->belongsTo(Uom::class); }

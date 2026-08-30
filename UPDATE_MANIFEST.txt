@@ -1,0 +1,38 @@
+CGOne Reference Master Pages v6 - File Manifest
+===============================================
+OVERWRITE:
+app/Http/Controllers/MasterData/AbstractMasterController.php
+app/Http/Controllers/MasterData/CustomerController.php
+app/Http/Controllers/MasterData/ItemController.php
+app/Http/Controllers/MasterData/VendorController.php
+app/Models/Customer.php
+app/Models/Item.php
+app/Models/ItemUom.php
+app/Models/Vendor.php
+app/Providers/RouteServiceProvider.php
+resources/views/master/form.blade.php
+resources/views/master/index.blade.php
+resources/views/master/workspace.blade.php
+routes/master_workspace.php
+
+NEW / INCLUDED SUPPORT FILES:
+app/Http/Controllers/MasterData/BusinessPartnerAddressController.php
+app/Http/Controllers/MasterData/ItemAliasController.php
+app/Http/Controllers/MasterData/ItemUomController.php
+app/Models/BusinessPartnerAddress.php
+app/Models/ItemAlias.php
+app/Services/MasterData/MasterWorkspaceService.php
+database/migrations/2026_08_30_000100_create_business_partner_addresses.php
+database/migrations/2026_08_30_000200_expand_reference_master_fields.php
+resources/views/master/partials/workspace-addresses.blade.php
+resources/views/master/partials/workspace-audit.blade.php
+resources/views/master/partials/workspace-customer.blade.php
+resources/views/master/partials/workspace-item.blade.php
+resources/views/master/partials/workspace-vendor.blade.php
+APPLY_UPDATE.bat
+UPDATE_README.txt
+UPDATE_MANIFEST.txt
+
+VERIFICATION SOURCE (optional, included in development workspace but not required to run app):
+tests/Contracts/v5_master_workspace_contract.py
+tests/Contracts/v6_reference_master_contract.py
