@@ -1,10 +1,11 @@
 <?php
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Audit\ActivityLogController;
 use App\Http\Controllers\Ledger\LedgerController;
 use App\Http\Controllers\Transactions\AdjustmentController;
-use App\Http\Controllers\Configuration\{DocumentSequenceController,MenuSecurityController,PermissionController,PostingSetupController,RoleController,SystemSettingController,UserController};
+use App\Http\Controllers\Configuration\{DepartmentController,DocumentSequenceController,MenuSecurityController,PermissionController,PostingSetupController,RoleController,SystemSettingController,UserController};
 use App\Http\Controllers\MasterData\{ChartOfAccountController,CustomerController,ItemController,PriceLevelController,UomController,VendorController,WarehouseController,LocationController,LocationBinController,ItemCategoryController,BrandController};
 use App\Http\Controllers\Sales\SalesDocumentController;
 use App\Http\Controllers\Purchase\PurchaseDocumentController;
@@ -20,6 +21,9 @@ Route::middleware('guest')->group(function(){Route::get('/login',[LoginControlle
 Route::middleware('auth')->group(function(){
  Route::post('/logout',[LoginController::class,'destroy'])->name('logout');
  Route::get('/dashboard',DashboardController::class)->name('dashboard');
+ Route::get('/profile',[ProfileController::class,'show'])->name('profile.show');
+ Route::get('/profile/password',[ProfileController::class,'password'])->name('profile.password');
+ Route::put('/profile/password',[ProfileController::class,'updatePassword'])->name('profile.password.update');
 
  // Sales / AR: sales-requests -> sales-orders -> shipments -> sales-invoices
  Route::prefix('sales')->group(function(){
@@ -55,6 +59,7 @@ Route::middleware('auth')->group(function(){
 
  $masters=['items'=>ItemController::class,'customers'=>CustomerController::class,'vendors'=>VendorController::class,'coa'=>ChartOfAccountController::class,'warehouses'=>WarehouseController::class,'uoms'=>UomController::class,'price-levels'=>PriceLevelController::class];
  foreach($masters as $slug=>$controller){$name='master.'.$slug;Route::get("/master/{$slug}",[$controller,'index'])->name($name.'.index');Route::get("/master/{$slug}/export",[$controller,'export'])->name($name.'.export');Route::get("/master/{$slug}/create",[$controller,'create'])->name($name.'.create');Route::post("/master/{$slug}",[$controller,'store'])->name($name.'.store');Route::get("/master/{$slug}/{id}",[$controller,'show'])->whereNumber('id')->name($name.'.show');Route::get("/master/{$slug}/{id}/edit",[$controller,'edit'])->whereNumber('id')->name($name.'.edit');Route::put("/master/{$slug}/{id}",[$controller,'update'])->whereNumber('id')->name($name.'.update');Route::patch("/master/{$slug}/{id}/status",[$controller,'status'])->whereNumber('id')->name($name.'.status');}
+ Route::post('/master/coa/standard-template',[ChartOfAccountController::class,'applyStandardTemplate'])->name('master.coa.standard-template');
  Route::get('/ledgers/items',[LedgerController::class,'items'])->name('ledger.items.index');Route::get('/ledgers/customers',[LedgerController::class,'customers'])->name('ledger.customers.index');Route::get('/ledgers/vendors',[LedgerController::class,'vendors'])->name('ledger.vendors.index');Route::get('/ledgers/gl',[LedgerController::class,'gl'])->name('ledger.gl.index');
 
  Route::post('/data-views',[DataViewController::class,'store'])->name('data-views.store');
@@ -121,7 +126,8 @@ Route::middleware('auth')->group(function(){
  Route::get('/transactions/adjustments',[AdjustmentController::class,'index'])->name('adjustments.index');Route::get('/transactions/adjustments/create',[AdjustmentController::class,'create'])->name('adjustments.create');Route::post('/transactions/adjustments',[AdjustmentController::class,'store'])->name('adjustments.store');
 
  Route::get('/configuration/users',[UserController::class,'index'])->name('config.users.index');Route::get('/configuration/users/create',[UserController::class,'create'])->name('config.users.create');Route::post('/configuration/users',[UserController::class,'store'])->name('config.users.store');Route::get('/configuration/users/{user}/edit',[UserController::class,'edit'])->name('config.users.edit');Route::put('/configuration/users/{user}',[UserController::class,'update'])->name('config.users.update');Route::patch('/configuration/users/{user}/status',[UserController::class,'status'])->name('config.users.status');
- Route::get('/configuration/roles',[RoleController::class,'index'])->name('config.roles.index');Route::get('/configuration/roles/create',[RoleController::class,'create'])->name('config.roles.create');Route::post('/configuration/roles',[RoleController::class,'store'])->name('config.roles.store');Route::get('/configuration/roles/{role}/edit',[RoleController::class,'edit'])->name('config.roles.edit');Route::put('/configuration/roles/{role}',[RoleController::class,'update'])->name('config.roles.update');
+ Route::get('/configuration/roles',[RoleController::class,'index'])->name('config.roles.index');Route::get('/configuration/roles/create',[RoleController::class,'create'])->name('config.roles.create');Route::post('/configuration/roles',[RoleController::class,'store'])->name('config.roles.store');Route::post('/configuration/roles/{role}/duplicate',[RoleController::class,'duplicate'])->name('config.roles.duplicate');Route::get('/configuration/roles/{role}/users',[RoleController::class,'users'])->name('config.roles.users');Route::get('/configuration/roles/{role}/edit',[RoleController::class,'edit'])->name('config.roles.edit');Route::put('/configuration/roles/{role}',[RoleController::class,'update'])->name('config.roles.update');
+ Route::get('/configuration/departments',[DepartmentController::class,'index'])->name('config.departments.index');Route::get('/configuration/departments/create',[DepartmentController::class,'create'])->name('config.departments.create');Route::post('/configuration/departments',[DepartmentController::class,'store'])->name('config.departments.store');Route::get('/configuration/departments/{department}/edit',[DepartmentController::class,'edit'])->name('config.departments.edit');Route::put('/configuration/departments/{department}',[DepartmentController::class,'update'])->name('config.departments.update');
  Route::get('/configuration/menu-security',[MenuSecurityController::class,'index'])->name('config.menu-security.index');Route::get('/configuration/menu-security/{role}',[MenuSecurityController::class,'edit'])->name('config.menu-security.edit');Route::put('/configuration/menu-security/{role}',[MenuSecurityController::class,'update'])->name('config.menu-security.update');
  Route::get('/configuration/permissions',[PermissionController::class,'index'])->name('config.permissions.index');
  Route::get('/configuration/numbering',[DocumentSequenceController::class,'index'])->name('config.numbering.index');Route::get('/configuration/numbering/create',[DocumentSequenceController::class,'create'])->name('config.numbering.create');Route::post('/configuration/numbering',[DocumentSequenceController::class,'store'])->name('config.numbering.store');Route::get('/configuration/numbering/{sequence}/edit',[DocumentSequenceController::class,'edit'])->name('config.numbering.edit');Route::put('/configuration/numbering/{sequence}',[DocumentSequenceController::class,'update'])->name('config.numbering.update');

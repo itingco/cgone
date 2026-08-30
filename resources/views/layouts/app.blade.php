@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title','ERP') - CGOne ERP</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
@@ -102,6 +103,7 @@
         'config' => [
             'label' => 'Configuration',
             'primary' => [
+                ['config.departments','Departments',route('config.departments.index')],
                 ['config.users','Users',route('config.users.index')],
                 ['config.roles','Roles',route('config.roles.index')],
                 ['config.menu-security','Menu Security',route('config.menu-security.index')],
@@ -161,7 +163,7 @@
     <main class="content flex-grow-1">
         <nav class="navbar bg-white border-bottom px-4 topbar">
             <div><div class="fw-bold">@yield('title','ERP')</div><div class="small text-muted">CGOne ERP</div></div>
-            <div class="d-flex align-items-center gap-3"><span class="small text-muted">{{ auth()->user()->name }}</span><form method="post" action="{{ route('logout') }}">@csrf<button class="btn btn-sm btn-outline-secondary">Logout</button></form></div>
+            <div class="dropdown"><button class="btn btn-light border dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false"><span class="rounded-circle bg-dark text-white d-inline-grid align-items-center justify-content-center" style="width:30px;height:30px">{{ strtoupper(substr(auth()->user()->name,0,1)) }}</span><span class="text-start d-none d-md-inline"><span class="d-block fw-semibold lh-sm">{{ auth()->user()->name }}</span><small class="text-muted">{{ auth()->user()->department?->name ?? 'No Department' }}</small></span></button><ul class="dropdown-menu dropdown-menu-end shadow border-0" style="min-width:280px"><li class="px-3 py-2"><div class="fw-semibold">{{ auth()->user()->name }}</div><div class="small text-muted">{{ auth()->user()->email }}</div><div class="small mt-1"><span class="badge text-bg-light border">{{ auth()->user()->department?->name ?? 'No Department' }}</span></div></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="{{ route('profile.show') }}">My Profile</a></li><li><a class="dropdown-item" href="{{ route('profile.password') }}">Change Password</a></li><li><hr class="dropdown-divider"></li><li><form method="post" action="{{ route('logout') }}">@csrf<button class="dropdown-item text-danger">Logout</button></form></li></ul></div>
         </nav>
         <div class="p-4">
             @if(session('success'))<div class="alert alert-success border-0">{{ session('success') }}</div>@endif

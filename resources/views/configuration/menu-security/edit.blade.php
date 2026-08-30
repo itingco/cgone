@@ -1,18 +1,28 @@
 @extends('layouts.app')
-@section('title','Menu Security - '.$role->name)
+@section('title','Role Security - '.$role->name)
 @section('content')
-<form method="post" action="{{ route('config.menu-security.update',$role) }}">
-@csrf @method('PUT')
-<div class="card"><div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>Menu</th>@foreach($permissions as $permission)<th class="text-center">{{ $permission->code }}</th>@endforeach</tr></thead><tbody>
-@foreach($menus as $menu)
-<tr><td>{{ $menu->label }} <span class="text-muted small">({{ $menu->code }})</span></td>
-@foreach($permissions as $permission)
-    @php $key = $menu->id.':'.$permission->id; @endphp
-    <td class="text-center"><input class="form-check-input" type="checkbox" name="grants[]" value="{{ $key }}" @checked(isset($grants[$key]))></td>
-@endforeach
-</tr>
-@endforeach
+<form method="post" action="{{ route('config.menu-security.update',$role) }}">@csrf @method('PUT')
+<div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap"><div><h4 class="mb-1">{{ $role->name }}</h4><div class="text-muted small">Set menu permissions, then optionally restrict which rows this role can see.</div></div><div class="btn-group"><button type="button" class="btn btn-outline-secondary" id="permission-select-all">Select All Permissions</button><button type="button" class="btn btn-outline-secondary" id="permission-clear-all">Clear All</button></div></div>
+
+@foreach($menuGroups as $category=>$menus)
+<div class="card mb-3"><div class="card-header bg-white d-flex justify-content-between align-items-center"><strong>{{ $category }}</strong><div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-secondary category-select" data-category="{{ $loop->index }}">Select Category</button><button type="button" class="btn btn-outline-secondary category-clear" data-category="{{ $loop->index }}">Clear</button></div></div><div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>Module</th>@foreach($permissions as $permission)<th class="text-center text-uppercase small">{{ $permission->code }}</th>@endforeach</tr></thead><tbody>
+@foreach($menus as $menu)<tr><td><strong>{{ $menu->label }}</strong><div class="text-muted small">{{ $menu->code }}</div></td>@foreach($permissions as $permission)@php $key=$menu->id.':'.$permission->id; @endphp<td class="text-center"><input class="form-check-input permission-checkbox permission-category-{{ $loop->parent->parent->index }}" type="checkbox" name="grants[]" value="{{ $key }}" @checked(isset($grants[$key]))></td>@endforeach</tr>@endforeach
 </tbody></table></div></div>
-<div class="mt-3"><button class="btn btn-primary">Save Permissions</button> <a class="btn btn-outline-secondary" href="{{ route('config.menu-security.index') }}">Back</a></div>
+@endforeach
+
+<div class="card mb-3"><div class="card-header bg-white"><strong>Advanced Data Filters</strong><div class="text-muted small mt-1">Rules inside one role are AND. If no filter is configured, the role can see all rows allowed by its menu permission. Multiple roles are combined as a union (OR).</div></div><div class="card-body">
+<div class="alert alert-info py-2 small">For safety, only approved fields are available. Current Sales filters: status, customer, warehouse, currency, and creator. Values for IN / NOT IN are comma-separated.</div>
+<div id="scope-rows">
+@php $rowsForUi=$scopes->count()?$scopes:[null]; @endphp
+@foreach($rowsForUi as $scope)<div class="row g-2 align-items-end scope-row mb-2"><div class="col-lg-5"><label class="form-label small">Module / Field</label><select class="form-select scope-field" name="scopes[{{ $loop->index }}][module_field]"><option value="">- No filter -</option>@foreach($scopeDefinitions as $menuCode=>$fields)@if(isset($scopeMenus[$menuCode]))<optgroup label="{{ $scopeMenus[$menuCode]->label }}">@foreach($fields as $field=>$definition)<option value="{{ $menuCode }}|{{ $field }}" @selected($scope && $scope->menu?->code===$menuCode && $scope->field===$field)>{{ $definition['label'] }}</option>@endforeach</optgroup>@endif @endforeach</select></div><div class="col-lg-2"><label class="form-label small">Operator</label><select class="form-select" name="scopes[{{ $loop->index }}][operator]">@foreach(['=','!=','IN','NOT IN','IS NULL','IS NOT NULL'] as $op)<option value="{{ $op }}" @selected($scope?->operator===$op)>{{ $op }}</option>@endforeach</select></div><div class="col-lg-4"><label class="form-label small">Value</label><input class="form-control" name="scopes[{{ $loop->index }}][value]" value="{{ $scope?->value }}" placeholder="ABC or 1,2,3"></div><div class="col-lg-1"><button type="button" class="btn btn-outline-danger w-100 scope-remove">×</button></div></div>@endforeach
+</div><button type="button" class="btn btn-sm btn-outline-primary" id="scope-add">+ Add Filter</button>
+</div></div>
+<div class="d-flex gap-2"><button class="btn btn-primary">Save Security</button><a class="btn btn-outline-secondary" href="{{ route('config.roles.index') }}">Back</a></div>
 </form>
 @endsection
+@push('scripts')
+<script>
+(()=>{const checks=()=>[...document.querySelectorAll('.permission-checkbox')];document.getElementById('permission-select-all')?.addEventListener('click',()=>checks().forEach(x=>x.checked=true));document.getElementById('permission-clear-all')?.addEventListener('click',()=>checks().forEach(x=>x.checked=false));document.querySelectorAll('.category-select').forEach(b=>b.addEventListener('click',()=>document.querySelectorAll('.permission-category-'+b.dataset.category).forEach(x=>x.checked=true)));document.querySelectorAll('.category-clear').forEach(b=>b.addEventListener('click',()=>document.querySelectorAll('.permission-category-'+b.dataset.category).forEach(x=>x.checked=false)));
+const box=document.getElementById('scope-rows');let index=box?.querySelectorAll('.scope-row').length||0;document.getElementById('scope-add')?.addEventListener('click',()=>{const first=box.querySelector('.scope-row');if(!first)return;const row=first.cloneNode(true);row.querySelectorAll('input,select').forEach(el=>{el.name=el.name.replace(/scopes\[\d+\]/,'scopes['+index+']');if(el.tagName==='INPUT')el.value='';else el.selectedIndex=0;});box.appendChild(row);index++;});box?.addEventListener('click',e=>{if(!e.target.classList.contains('scope-remove'))return;const rows=box.querySelectorAll('.scope-row');if(rows.length===1){rows[0].querySelectorAll('input').forEach(x=>x.value='');rows[0].querySelectorAll('select').forEach(x=>x.selectedIndex=0);}else e.target.closest('.scope-row').remove();});})();
+</script>
+@endpush

@@ -5,6 +5,11 @@ use Illuminate\Http\Request;
 
 class ProfileController extends Controller
 {
+    public function show(Request $request)
+    {
+        return view('profile.show',['user'=>$request->user()->load(['department','roles'])]);
+    }
+
     public function password(){ return view('profile.password'); }
 
     public function updatePassword(Request $request)
@@ -14,6 +19,6 @@ class ProfileController extends Controller
             'password'=>['required','string','min:8','confirmed'],
         ]);
         $request->user()->update(['password'=>$data['password']]);
-        return redirect()->route('dashboard')->with('success','Password berhasil diubah.');
+        return redirect()->route('profile.show')->with('success','Password berhasil diubah.');
     }
 }

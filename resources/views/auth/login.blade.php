@@ -17,6 +17,7 @@
 </section>
 <section class="form-panel"><div class="login-card">
  <div class="eyebrow">Secure access</div><h2>Welcome back</h2><p class="lead-copy">Sign in to continue to your ERP workspace.</p>
+ @if(session('warning'))<div class="alert alert-warning border-0 rounded-3">{{ session('warning') }}</div>@endif
  @if($errors->any())<div class="alert alert-danger border-0 rounded-3">{{ $errors->first() }}</div>@endif
  <form method="post" action="{{ route('login.store') }}">@csrf
   <div class="mb-3"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ old('email') }}" placeholder="name@company.com" required autofocus autocomplete="username"></div>

@@ -24,12 +24,23 @@ composer install --no-dev --optimize-autoloader
 ## 3. Environment
 
 ```bash
+# New installation only:
 cp .env.example .env
 nano .env
 php artisan key:generate
+
+# Existing production deployment: NEVER regenerate APP_KEY.
+# Keep the current .env / APP_KEY so cookies and sessions remain decryptable.
 ```
 
-Set koneksi SQL Server dan `APP_URL` sesuai server.
+Set koneksi SQL Server dan `APP_URL` sesuai server. Untuk session stabil gunakan:
+
+```env
+SESSION_DRIVER=database
+SESSION_LIFETIME=480
+```
+
+Perubahan session driver dapat membuat user yang sedang login perlu login ulang satu kali.
 
 ## 4. Permission Linux
 
@@ -90,7 +101,7 @@ Cek:
 - Master data dapat dibrowse.
 - Role tanpa permission menerima HTTP 403.
 - Role Administrator melihat seluruh menu.
-- Adjustment menghasilkan reversal, bukan update source.
+- Adjustment menghasilkan Undo/Reversal journal, bukan update source.
 - Direct `UPDATE` / `DELETE` ke ledger melalui SSMS ditolak trigger.
 - Activity log bertambah setelah perubahan master/config/reversal.
 

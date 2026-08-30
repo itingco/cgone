@@ -1,6 +1,11 @@
 <?php
 namespace App\Http\Controllers\MasterData;
+
 use App\Models\ChartOfAccount;
+use App\Services\Audit\ActivityLogService;
+use Database\Seeders\DistributorTechnicalToolsCoaSeeder;
+use Illuminate\Support\Facades\DB;
+
 class ChartOfAccountController extends AbstractMasterController
 {
     protected string $modelClass=ChartOfAccount::class;
@@ -15,4 +20,13 @@ class ChartOfAccountController extends AbstractMasterController
     protected function rules(?int $id=null): array{return ['code'=>$this->uniqueCode($id),'name'=>['required','string','max:255'],'parent_id'=>['nullable','exists:chart_of_accounts,id'],'account_type'=>['required','in:ASSET,LIABILITY,EQUITY,REVENUE,EXPENSE'],'account_category'=>['nullable','string','max:50'],'legacy_account_type'=>['nullable','string','max:50'],'normal_balance'=>['required','in:DEBIT,CREDIT'],'currency_code'=>['required','string','max:10'],'require_cost_center'=>['required','boolean'],'allow_posting'=>['required','boolean'],'is_active'=>['required','boolean']];}
     protected function options(): array{$id=request()->route('id');return ['accounts'=>ChartOfAccount::query()->when($id,fn($q)=>$q->where('id','<>',$id))->orderBy('code')->get()->mapWithKeys(fn($a)=>[$a->id=>$a->code.' - '.$a->name]),'types'=>array_combine(['ASSET','LIABILITY','EQUITY','REVENUE','EXPENSE'],['Asset','Liability','Equity','Revenue','Expense']),'balances'=>['DEBIT'=>'Debit','CREDIT'=>'Credit']];}
     protected function dataViewFields(): array{return ['code'=>['label'=>'Account Code','type'=>'text','column'=>'code'],'name'=>['label'=>'Account Name','type'=>'text','column'=>'name'],'account_type'=>['label'=>'Type','type'=>'text','column'=>'account_type'],'account_category'=>['label'=>'Category','type'=>'text','column'=>'account_category'],'currency_code'=>['label'=>'Currency','type'=>'text','column'=>'currency_code'],'normal_balance'=>['label'=>'Normal Balance','type'=>'text','column'=>'normal_balance'],'require_cost_center'=>['label'=>'Require Cost Center','type'=>'boolean','column'=>'require_cost_center'],'allow_posting'=>['label'=>'Allow Posting','type'=>'boolean','column'=>'allow_posting'],'is_active'=>['label'=>'Active','type'=>'boolean','column'=>'is_active']];}
+    protected function indexExtras(): array{return ['canApplyStandardCoa'=>!ChartOfAccount::query()->exists()];}
+
+    public function applyStandardTemplate(ActivityLogService $audit)
+    {
+        abort_unless(app(\App\Services\Security\MenuAuthorizationService::class)->allows(auth()->user(),$this->menuCode,'create'),403);
+        if (ChartOfAccount::query()->exists()) return back()->withErrors(['coa'=>'Standard template can only be applied when Chart of Accounts is empty.']);
+        DB::transaction(function() use($audit){app(DistributorTechnicalToolsCoaSeeder::class)->run();$audit->record('master.coa','apply-standard-template',null,[],[],['template'=>'technical-tools-distributor']);});
+        return redirect()->route('master.coa.index')->with('success','Standard distributor Chart of Accounts created.');
+    }
 }
