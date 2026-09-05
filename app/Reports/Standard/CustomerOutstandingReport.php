@@ -1,0 +1,7 @@
+<?php
+namespace App\Reports\Standard;
+use App\Services\Reports\Contracts\StandardReport;use App\Services\Reports\ReportResult;use Illuminate\Support\Facades\DB;
+final class CustomerOutstandingReport extends AbstractStandardReport implements StandardReport{
+ public function code():string{return 'CUSTOMER_OUTSTANDING';}public function parameters():array{return array_merge($this->asOfParameters(),['customer_id'=>$this->lookupParameter('Customer','customers')]);}
+ public function run(array $p):ReportResult{$q=DB::table('customer_ledgers as l')->join('customers as c','c.id','=','l.customer_id')->leftJoin('business_units as bu','bu.id','=','l.business_unit_id')->select('c.code','c.name','c.credit_limit','bu.code as business_unit')->selectRaw('SUM(l.debit-l.credit) AS balance')->selectRaw('MAX(l.posting_at) AS last_posting')->where('l.status','POSTED');$this->applyAsOf($q,'l.posting_at',$p);$this->applyBusinessUnit($q,'l.business_unit_id',$p);if(!empty($p['customer_id']))$q->where('l.customer_id',(int)$p['customer_id']);$rows=$q->groupBy('c.code','c.name','c.credit_limit','bu.code')->havingRaw('ABS(SUM(l.debit-l.credit))>0.0001')->orderBy('c.code')->get()->all();return new ReportResult('Customer Outstanding',[$this->col('code','Customer'),$this->col('name','Name'),$this->col('business_unit','Business Unit'),$this->col('balance','Outstanding','money'),$this->col('credit_limit','Credit Limit','money'),$this->col('last_posting','Last Posting','datetime')],$rows,['Outstanding'=>$this->moneySum($rows,'balance')],['balance'=>$this->moneySum($rows,'balance')]);}
+}

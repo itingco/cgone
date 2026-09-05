@@ -1,0 +1,4 @@
+<?php
+namespace App\Models\HumanCapital\Payroll;
+use Illuminate\Database\Eloquent\Model;
+final class SalaryComponentPostingMapping extends Model { protected $guarded=[]; protected $casts=['effective_from'=>'date','effective_to'=>'date','is_active'=>'boolean']; public function component(){return $this->belongsTo(SalaryComponent::class,'salary_component_id');} public function businessUnit(){return $this->belongsTo(\App\Models\BusinessUnit::class);} public function debitAccount(){return $this->belongsTo(\App\Models\ChartOfAccount::class,'debit_account_id');} public function creditAccount(){return $this->belongsTo(\App\Models\ChartOfAccount::class,'credit_account_id');} }

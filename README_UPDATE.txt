@@ -1,154 +1,210 @@
-CGOne Update V3 - Header Database Selector + Snapshot Reference
-===============================================================
+CGOne ERP — Cumulative Update R4 Visual Report Builder
+Release: Version 31.08.2026
+=====================================================
 
-V3 changes:
-- Database selector moved from the left sidebar to the application header.
-- Business Unit selector remains in the sidebar as the active GL dimension.
-- Database Manager gear is available beside the header database selector for authorized users.
-- `as_ingco.snapshot` has been inspected and confirmed usable as a legacy ERP schema reference.
-- See SNAPSHOT_SCHEMA_ANALYSIS.md for confirmed IC_Items, AR_Customers, AP_Suppliers and AC_Accounts fields.
+PAKET INI CUMULATIVE
+--------------------
+Paket ini mencakup update V1/V2/V3, Reporting R1 + hotfix Report Center,
+Reporting R2 Sales/Purchase, Reporting R3 Inventory/Finance, dan Reporting R4
+Visual Report Builder.
 
-CGOne ERP - Update V2
-Database Manager + Profile + Collapsible Sidebar + ERP Master Tabs
-Tanggal: 30 Agustus 2026
+INSTALL
+-------
+1. Extract ZIP.
+2. Copy semua isi ke root project CGOne.
+3. Allow overwrite/replace.
+4. Jalankan satu command:
 
-CARA INSTALL
-============
-1. Backup project dan database PostgreSQL Anda.
-2. Extract ZIP ini.
-3. Copy seluruh isi folder hasil extract ke ROOT project CGOne.
-4. Pilih overwrite/timpa file yang sama.
-5. JANGAN timpa file .env aktual Anda dengan .env.example.
-6. Jalankan SATU perintah ini dari root project:
+php artisan optimize:clear && php artisan erp:migrate-databases --force --seed
 
-   php artisan optimize:clear && php artisan erp:migrate-databases --force
+Tidak perlu edit .env.
 
-ENV ANDA
-========
-Untuk .env yang sebelumnya sudah saya perbaiki, konfigurasi berikut sudah sesuai:
+R4 - VISUAL REPORT BUILDER
+--------------------------
+Menu baru:
+Reports -> Report Builder
 
-DB_CONNECTION=pgsql
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_DATABASE=cgone_erp
-DB_USERNAME=erp
-DB_PASSWORD=...
-ERP_DB_CONNECTION=pgsql
-ERP_DATABASES="cgone_erp|CGOne ERP"
-SESSION_DRIVER=file
+Visual Builder memakai datasource dan field yang sudah di-whitelist aplikasi.
+User biasa TIDAK mengisi nama tabel, JOIN, atau SQL.
 
-Tidak perlu mengedit ERP_DATABASES lagi untuk setiap database baru.
-Database yang ditambah melalui UI disimpan di:
-storage/app/erp-databases.json
+Datasource awal:
+- Sales Invoice Detail
+- Sales Order Detail
+- Customer Ledger
+- Purchase Invoice Detail
+- Purchase Order Detail
+- Vendor Ledger
+- Inventory Movement
+- Stock Position
+- General Ledger
+- Item Master
+- Customer Master
+- Supplier Master
+- Chart of Accounts
+- Audit Activity
 
-FITUR 1 - DATABASE MANAGER POSTGRESQL
-=====================================
-Lokasi:
-Configuration > Database Manager
-atau klik "Manage / Add Database" di selector database kiri atas.
+Fitur:
+- pilih kolom;
+- filter AND / OR;
+- SUM / COUNT / AVG / MIN / MAX pada field yang diperbolehkan;
+- grouping maksimal 4 level;
+- sorting;
+- calculated field aman: +, -, x, /;
+- preview maksimal 500 row;
+- report screen maksimal 5.000 row;
+- summary cards;
+- chart Column / Bar / Line / Pie / Donut;
+- custom report default PRIVATE;
+- Saved Views untuk nilai filter ketika report dijalankan;
+- Share / Access per Role dan User;
+- Clone Visual Report;
+- Excel dan CSV;
+- execution audit;
+- version snapshot.
 
-Fungsi:
-- Test Connection ke database PostgreSQL pada server yang sama.
-- Register Existing Database.
-- Create New Database.
-- Create New Database otomatis menjalankan migration + seeder CGOne.
-- User aktif, role, dan permission user ikut dibuat pada database baru berdasarkan code.
-- Database baru otomatis masuk selector kiri atas.
-- Unregister hanya melepas database dari selector. TIDAK melakukan DROP DATABASE.
+PERMISSION
+----------
+Report Center tetap menggunakan permission reports.center.
 
-Syarat Create Database:
-User PostgreSQL dari DB_USERNAME harus memiliki privilege CREATEDB.
-Jika tidak, halaman akan menampilkan error PostgreSQL dan database tidak dibuat.
+Report Builder menggunakan menu permission:
+reports.builder
 
-Server/host/port/username/password database baru selalu mengikuti koneksi PostgreSQL utama dari .env.
-Database Manager tidak menyimpan password baru.
+Administrator mendapat permission melalui seeder/reference data.
+Role lain dapat diberi View/Create/Edit melalui konfigurasi menu-security yang sudah ada.
 
-FITUR 2 - PROFILE KANAN ATAS
-=============================
-Nama user kanan atas sekarang menjadi dropdown profile:
-- Profile & Password
-- My Documents
-- Logout
+Setelah custom report dibuat, akses report diatur terpisah menggunakan:
+- View
+- Export
+- Print
+- Edit
+- Share
+- Clone
+- Delete
+- Manage
 
-Profile dapat mengubah Name. Email dibuat read-only karena dipakai sebagai identitas lintas database.
-Perubahan Name disinkronkan ke seluruh database terdaftar yang memiliki user dengan email yang sama.
-Change Password menggunakan current password + confirmation dan password baru juga disinkronkan ke seluruh database terdaftar.
+VISIBILITY
+----------
+PRIVATE : owner saja, kecuali diberi grant eksplisit.
+SHARED  : user/role yang diberi report access.
+COMPANY : seluruh active user mendapat View; hak lain tetap perlu grant.
 
-My Documents menampilkan maksimal 200 dokumen posted terbaru milik user pada database aktif:
-- Posted Shipment
-- Posted Sales Invoice
-- Posted Receipt
-- Posted Purchase Invoice
+BUSINESS UNIT
+-------------
+Business Unit tetap FIELD DI DALAM RECORD.
 
-FITUR 3 - SIDE PANEL SHOW / HIDE
-================================
-Tombol hamburger di topbar dapat show/hide sidebar.
-Status disimpan di browser localStorage, sehingga pilihan tetap diingat saat pindah halaman.
+Visual Report Builder:
+- dapat menampilkan BU sebagai kolom;
+- dapat filter BU;
+- dapat group/sort BU;
+- TIDAK membaca BU aktif dari session sebagai hidden filter;
+- jika filter BU dikosongkan, data seluruh BU yang sesuai filter lain ikut dibaca.
 
-FITUR 4 - MASTER DATA ERP DALAM TAB
-===================================
-Master Item, Customer, Supplier/Vendor, dan Chart of Accounts sekarang dikelompokkan dalam tab.
+RUNTIME FILTER
+--------------
+Filter yang dibuat di Visual Builder akan muncul kembali sebagai filter ketika custom
+report dibuka. User dapat mengganti nilai filter tanpa mengubah definisi report dan
+dapat menyimpan kombinasi filter tersebut sebagai Saved View.
 
-ITEM
-- General
-- Inventory & Procurement
-- Accounting & Posting
-- Description
-- Control
+ADVANCED SQL — R5
+-----------------
+Advanced SQL Report sudah aktif untuk user yang memiliki menu permission reports.sql.
+Default seeder/reference data memberikan akses penuh ke role ADMINISTRATOR.
 
-Tambahan field:
-Short Name, Barcode/EAN, Manufacturer Code, Model/Type, Country of Origin, HS Code,
-Warranty, Weight/Length/Width/Height, Track Serial, Track Batch/Lot,
-Sales Description, Purchase Description.
+Proteksi R5:
+- hanya SELECT / WITH;
+- DML / DDL / COPY / CALL / DO / multi-statement ditolak;
+- SELECT FOR UPDATE/SHARE dan SELECT INTO ditolak;
+- parameter memakai named binding (:parameter_name), bukan string concatenation;
+- PostgreSQL menjalankan query di transaksi READ ONLY;
+- statement timeout default 60 detik;
+- preview maksimal 500 row;
+- screen maksimal 5.000 row;
+- synchronous export maksimal 25.000 row;
+- sensitive parameter dimasking di execution log dan header Excel;
+- execution tetap mengikuti database aktif di header;
+- Business Unit hanya parameter/field eksplisit, tanpa hidden filter session.
 
-CUSTOMER
-- General
-- Address
-- Commercial
-- Accounting & Tax
-- Control
+Saved View tersedia untuk SQL parameter non-sensitive. Nilai parameter yang ditandai
+sensitive tidak boleh disimpan ke Saved View.
 
-Tambahan field:
-Contact Person, Mobile, Fax, Website, Billing/Shipping Postal Code, Currency,
-Salesperson Code, Tax Registered Name, PKP, Credit Hold, Notes.
+VERIFIKASI PEMBUATAN PAKET
+--------------------------
+- PHP lint dijalankan pada seluruh file PHP patch.
+- 14 datasource adapters terdaftar dan dibandingkan dengan config.
+- Standalone validation harness untuk VisualReportValidator dijalankan.
+- Standalone arithmetic harness untuk CalculationCompiler dijalankan.
+- Standalone query-builder harness untuk VisualReportCompiler dijalankan.
+- Static scan memastikan tidak ada hidden Business Unit session filter.
+- Static scan memastikan Builder tidak menyediakan input table/JOIN/raw SQL.
+- ZIP integrity diperiksa.
+- Full php artisan test tidak dapat dijalankan di environment pembuat paket karena
+  full repository + vendor Composer tidak tersedia.
 
-SUPPLIER / VENDOR
-- General
-- Address
-- Commercial
-- Banking
-- Accounting & Tax
-- Control
+Detail teknis:
+REPORTING_R4_NOTES.md
 
-Tambahan field:
-Contact Person, Mobile, Fax, Website, Postal Code, Currency, Lead Time,
-Minimum Order Value, Tax Registered Name, PKP, Purchase Hold, Notes.
+REPORTING R5
+------------
+Detail teknis tambahan tersedia di REPORTING_R5_NOTES.md.
 
-CHART OF ACCOUNTS
-- General
-- Reporting
-- Control
+R6 REPORTING FINAL - 31.08.2026
+--------------------------------
+Adds PDF/Print, signed drill-down, centralized comparative periods, report version history,
+6 management reports, report performance diagnostics, and reporting indexes.
 
-Tambahan field:
-Account Subcategory, Report Group, Cash Flow Category, External/Legacy Code,
-Control Account, Require Reconciliation, Notes.
+R6 has one new Composer dependency: dompdf/dompdf ^3.1.
+After copy/overwrite run exactly:
 
-CATATAN BACKUP ERP 123.BAK
-==========================
-File Drive 123.bak berukuran sekitar 1.216.471.040 bytes (±1,2 GB).
-Konektor file pada sesi pengembangan memiliki limit 268.435.456 bytes (256 MB), sehingga backup tidak dapat di-download dan dibuka penuh dari sesi ini.
+composer require dompdf/dompdf:^3.1 --no-interaction && php artisan optimize:clear && php artisan erp:migrate-databases --force --seed
 
-Karena itu field master pada update ini dibuat berdasarkan:
-1. struktur CGOne repository saat ini; dan
-2. struktur ERP yang memang sudah terlihat pada source/migration CGOne.
+Business Unit remains record data only. R6 does not add an implicit active-BU report filter.
 
-Field di atas TIDAK diklaim sebagai hasil ekstraksi penuh dari 123.bak.
-Untuk mapping 1:1 terhadap database ERP lama, berikan schema-only SQL / daftar CREATE TABLE untuk tabel item/customer/supplier/account. File seperti itu jauh lebih kecil dan bisa dianalisis langsung.
+R7 REPORTING STABILIZATION - 31.08.2026
+----------------------------------------
+R7 is a stabilization release. No new reporting business formula is introduced.
 
-ROLLBACK
-========
-Migration baru utama:
-- 2026_08_30_000100_create_business_units_and_add_gl_dimension.php
-- 2026_08_30_000200_expand_erp_master_fields.php
+Fixes:
+- CSV formula-injection hardening;
+- Visual + Standard export-aware row budget (500 preview / 5,000 screen / 25,000 export);
+- correct Visual/SQL version-history snapshots;
+- sensitive SQL runtime parameters use POST and encrypted temporary session storage;
+- sensitive SQL values are omitted from URL/export links/Saved Views;
+- standalone acceptance checker and regression harness included.
 
-Rollback harus dilakukan per database. Backup terlebih dahulu sebelum rollback.
+No new migration or Composer dependency is introduced by R7.
+If R6 has already been installed, after copy/overwrite run:
+
+php artisan optimize:clear
+
+Optional local reporting structure check:
+php tools/reporting_acceptance_check.php
+
+Details: REPORTING_R7_NOTES.md
+
+H1 CORE HR + TRANSACTION TEMPLATE - 31.08.2026
+------------------------------------------------
+H1 starts the approved Human Capital roadmap and changes Business Unit behavior.
+
+Changes:
+- global/sidebar Business Unit selector removed;
+- no active Business Unit session/context;
+- BU is selected/stored per transaction;
+- Configuration > Transaction Templates;
+- source document defaults win, template fills only still-empty fields;
+- Transaction Template values remain editable while the document is OPEN;
+- Employee Master;
+- Organization masters;
+- effective-dated Employee Allocation History with overlap validation.
+
+H1 does not backfill historical Business Unit data to MAIN.
+Normal GL posting still derives accounts from Posting Groups + Posting Setup; Transaction
+Template does not permit arbitrary GL-account defaults.
+
+After copy/overwrite run:
+
+php artisan optimize:clear && php artisan erp:migrate-databases --force --seed
+
+Optional H1 structural check:
+php tools/h1_acceptance_check.php
+
+Details: H1_NOTES.md

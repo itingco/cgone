@@ -21,7 +21,6 @@ final class DatabaseSwitchController extends Controller
         ]);
 
         $sessionKey = (string) config('erp_context.session_key', 'erp_database');
-        $businessUnitSessionKey = (string) config('erp_context.business_unit_session_key', 'erp_business_unit_id');
         $previous = $databases->resolve((string) $request->session()->get($sessionKey));
         $target = (string) $data['database'];
         $currentUser = $request->user();
@@ -57,7 +56,6 @@ final class DatabaseSwitchController extends Controller
         }
 
         $request->session()->put($sessionKey, $target);
-        $request->session()->forget($businessUnitSessionKey);
 
         return back()->with('success', 'Database aktif berhasil diganti ke '.$databases->available()[$target].'.');
     }

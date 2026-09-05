@@ -5,12 +5,124 @@ use App\Models\Documents\{PostedSalesInvoice,PostedShipmentLine,SalesInvoice};
 use App\Services\Documents\{DocumentStateService,PartialQuantityService};
 use App\Services\Ledger\{CustomerLedgerService,GeneralLedgerService};
 use App\Services\System\DocumentSequenceService;
+use Carbon\CarbonImmutable;
 use DomainException;
 use Illuminate\Support\Facades\DB;
-class SalesInvoicePostingService {
- public function __construct(private PostingAccountResolver $accounts,private DocumentSequenceService $numbers,private CustomerLedgerService $customers,private GeneralLedgerService $gl,private DocumentStateService $states,private PartialQuantityService $partial){}
- public function preview(SalesInvoice $doc):array{$this->validate($doc);$gl=[];$ar=$this->accounts->receivable($doc->customer);PostingSupport::add($gl,$ar,(float)$doc->grand_total,0,'Accounts Receivable');foreach($doc->lines as $line){$item=$line->item;$net=(float)$line->line_total-(float)$line->tax_amount;PostingSupport::add($gl,$this->accounts->sales($item),0,$net,"Sales {$item->code}");if((float)$line->tax_amount>0){$tax=$this->accounts->outputTax($item,$doc->customer);if(!$tax)throw new DomainException("Output VAT account is not configured for item {$item->code}.");PostingSupport::add($gl,$tax,0,(float)$line->tax_amount,"Output VAT {$item->code}");}}return ['gl'=>PostingSupport::normalized($gl),'customer_ledger'=>['customer_id'=>$doc->customer_id,'debit'=>(float)$doc->grand_total,'credit'=>0]];}
- public function post(SalesInvoice $doc,int $userId):PostedSalesInvoice{return DB::transaction(function()use($doc,$userId){$doc=SalesInvoice::with(['lines.item','customer'])->lockForUpdate()->findOrFail($doc->id);$this->lockSources($doc);$preview=$this->preview($doc);$postedNo=$this->numbers->next('POSTED_SALES_INVOICE');$ledger=$this->customers->post(['posting_at'=>now(),'source_module'=>'sales.invoice','document_type'=>'POSTED_SALES_INVOICE','document_number'=>$postedNo,'customer_id'=>$doc->customer_id,'debit'=>$doc->grand_total,'credit'=>0,'description'=>"Sales Invoice {$doc->document_no}",'posted_by'=>$userId]);$batch=$this->gl->postBatch(['document_number'=>$postedNo,'posting_at'=>now(),'source_module'=>'sales.invoice','document_type'=>'POSTED_SALES_INVOICE','description'=>"Posted Sales Invoice {$doc->document_no}",'posted_by'=>$userId],$preview['gl']);$posted=PostedSalesInvoice::create(PostingSupport::header($doc,$postedNo,$userId)+['source_sales_invoice_id'=>$doc->id,'customer_id'=>$doc->customer_id,'customer_ledger_id'=>$ledger->id,'gl_batch_id'=>$batch->id]);foreach($doc->lines as $line)$posted->lines()->create(['item_id'=>$line->item_id,'item_code'=>$line->item->code,'description'=>$line->description,'quantity'=>$line->quantity,'unit_price'=>$line->unit_price,'unit_cost'=>$line->unit_cost,'discount_amount'=>$line->discount_amount,'tax_rate'=>$line->tax_rate,'tax_amount'=>$line->tax_amount,'line_total'=>$line->line_total,'source_sales_invoice_line_id'=>$line->id,'source_posted_shipment_line_id'=>$line->source_posted_shipment_line_id,'source_sales_order_line_id'=>$line->source_sales_order_line_id,'direct_service'=>$line->direct_service,'price_level_id'=>$line->price_level_id,'list_unit_price'=>$line->list_unit_price,'location_discount_pct'=>$line->location_discount_pct,'bin_discount_pct'=>$line->bin_discount_pct,'manual_discount_pct'=>$line->manual_discount_pct,'discount_formula'=>$line->discount_formula,'net_unit_price'=>$line->net_unit_price]);$this->states->markPosted($doc,$posted->id,$userId,$postedNo);return $posted->load('lines');});}
- private function lockSources(SalesInvoice $doc): void { foreach($doc->lines as $line) if($line->source_posted_shipment_line_id) PostedShipmentLine::lockForUpdate()->findOrFail($line->source_posted_shipment_line_id); }
- private function validate(SalesInvoice $doc):void{if($doc->status!=='RELEASED')throw new DomainException('Sales Invoice must be RELEASED before posting.');$doc->loadMissing(['lines.item','customer']);if($doc->lines->isEmpty())throw new DomainException('Sales Invoice has no lines.');if((float)$doc->grand_total<=0)throw new DomainException('Sales Invoice grand total must be greater than zero.');foreach($doc->lines as $line){if($line->item->item_type==='INVENTORY'){if(!$line->source_posted_shipment_line_id)throw new DomainException("Inventory item {$line->item->code} must originate from a Posted Shipment.");$src=\App\Models\Documents\PostedShipmentLine::findOrFail($line->source_posted_shipment_line_id);$this->partial->assertFits((float)$line->quantity,(float)$this->partial->remainingPostedShipmentLine($src->id,(float)$src->quantity),"Posted Shipment line {$src->id}");}if($line->item->item_type!=='INVENTORY'&&!$line->direct_service)throw new DomainException("Service/non-stock item {$line->item->code} must be marked as direct service.");}}
+
+class SalesInvoicePostingService
+{
+    public function __construct(
+        private PostingAccountResolver $accounts,
+        private DocumentSequenceService $numbers,
+        private CustomerLedgerService $customers,
+        private GeneralLedgerService $gl,
+        private DocumentStateService $states,
+        private PartialQuantityService $partial
+    ) {}
+
+    public function preview(SalesInvoice $doc): array
+    {
+        $this->validate($doc);
+        $gl=[];
+        $ar=$this->accounts->receivable($doc->customer);
+        PostingSupport::add($gl,$ar,(float)$doc->grand_total,0,'Accounts Receivable');
+        foreach($doc->lines as $line){
+            $item=$line->item;
+            $net=(float)$line->line_total-(float)$line->tax_amount;
+            PostingSupport::add($gl,$this->accounts->sales($item),0,$net,"Sales {$item->code}");
+            if((float)$line->tax_amount>0){
+                $tax=$this->accounts->outputTax($item,$doc->customer);
+                if(!$tax) throw new DomainException("Output VAT account is not configured for item {$item->code}.");
+                PostingSupport::add($gl,$tax,0,(float)$line->tax_amount,"Output VAT {$item->code}");
+            }
+        }
+        return ['gl'=>PostingSupport::normalized($gl),'customer_ledger'=>['customer_id'=>$doc->customer_id,'debit'=>(float)$doc->grand_total,'credit'=>0]];
+    }
+
+    public function post(SalesInvoice $doc,int $userId): PostedSalesInvoice
+    {
+        return DB::transaction(function() use($doc,$userId){
+            $doc=SalesInvoice::with(['lines.item','customer'])->lockForUpdate()->findOrFail($doc->id);
+            $this->lockSources($doc);
+            $preview=$this->preview($doc);
+            $postedNo=$this->numbers->next('POSTED_SALES_INVOICE');
+
+            $ledger=$this->customers->post([
+                'posting_at'=>now(),
+                'source_module'=>'sales.invoice',
+                'document_type'=>'POSTED_SALES_INVOICE',
+                'document_number'=>$postedNo,
+                'customer_id'=>$doc->customer_id,
+                'business_unit_id'=>$doc->business_unit_id,
+                'debit'=>$doc->grand_total,
+                'credit'=>0,
+                'description'=>"Sales Invoice {$doc->document_no}",
+                'posted_by'=>$userId,
+            ]);
+
+            $batch=$this->gl->postBatch([
+                'document_number'=>$postedNo,
+                'posting_at'=>now(),
+                'source_module'=>'sales.invoice',
+                'document_type'=>'POSTED_SALES_INVOICE',
+                'description'=>"Posted Sales Invoice {$doc->document_no}",
+                'posted_by'=>$userId,
+                'business_unit_id'=>$doc->business_unit_id,
+            ],$preview['gl']);
+
+            $dueDate = $doc->due_date?->toDateString()
+                ?? CarbonImmutable::parse($doc->document_date)->addDays((int)$doc->customer->payment_term_days)->toDateString();
+
+            $posted=PostedSalesInvoice::create(PostingSupport::header($doc,$postedNo,$userId)+[
+                'due_date'=>$dueDate,
+                'source_sales_invoice_id'=>$doc->id,
+                'customer_id'=>$doc->customer_id,
+                'customer_ledger_id'=>$ledger->id,
+                'gl_batch_id'=>$batch->id,
+            ]);
+
+            foreach($doc->lines as $line){
+                $posted->lines()->create([
+                    'item_id'=>$line->item_id,'item_code'=>$line->item->code,'description'=>$line->description,
+                    'quantity'=>$line->quantity,'unit_price'=>$line->unit_price,'unit_cost'=>$line->unit_cost,
+                    'discount_amount'=>$line->discount_amount,'tax_rate'=>$line->tax_rate,'tax_amount'=>$line->tax_amount,
+                    'line_total'=>$line->line_total,'source_sales_invoice_line_id'=>$line->id,
+                    'source_posted_shipment_line_id'=>$line->source_posted_shipment_line_id,
+                    'source_sales_order_line_id'=>$line->source_sales_order_line_id,'direct_service'=>$line->direct_service,
+                    'price_level_id'=>$line->price_level_id,'list_unit_price'=>$line->list_unit_price,
+                    'location_discount_pct'=>$line->location_discount_pct,'bin_discount_pct'=>$line->bin_discount_pct,
+                    'manual_discount_pct'=>$line->manual_discount_pct,'discount_formula'=>$line->discount_formula,
+                    'net_unit_price'=>$line->net_unit_price,
+                ]);
+            }
+
+            $this->states->markPosted($doc,$posted->id,$userId,$postedNo);
+            return $posted->load('lines');
+        });
+    }
+
+    private function lockSources(SalesInvoice $doc): void
+    {
+        foreach($doc->lines as $line) {
+            if($line->source_posted_shipment_line_id) {
+                PostedShipmentLine::lockForUpdate()->findOrFail($line->source_posted_shipment_line_id);
+            }
+        }
+    }
+
+    private function validate(SalesInvoice $doc): void
+    {
+        if($doc->status!=='RELEASED') throw new DomainException('Sales Invoice must be RELEASED before posting.');
+        $doc->loadMissing(['lines.item','customer']);
+        if($doc->lines->isEmpty()) throw new DomainException('Sales Invoice has no lines.');
+        if((float)$doc->grand_total<=0) throw new DomainException('Sales Invoice grand total must be greater than zero.');
+        foreach($doc->lines as $line){
+            if($line->item->item_type==='INVENTORY'){
+                if(!$line->source_posted_shipment_line_id) throw new DomainException("Inventory item {$line->item->code} must originate from a Posted Shipment.");
+                $src=\App\Models\Documents\PostedShipmentLine::findOrFail($line->source_posted_shipment_line_id);
+                $this->partial->assertFits((float)$line->quantity,(float)$this->partial->remainingPostedShipmentLine($src->id,(float)$src->quantity),"Posted Shipment line {$src->id}");
+            }
+            if($line->item->item_type!=='INVENTORY'&&!$line->direct_service) throw new DomainException("Service/non-stock item {$line->item->code} must be marked as direct service.");
+        }
+    }
 }

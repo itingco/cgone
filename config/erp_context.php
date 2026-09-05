@@ -19,7 +19,6 @@ if ($default !== '' && ! array_key_exists($default, $databases)) {
 return [
     'connection' => env('ERP_DB_CONNECTION', env('DB_CONNECTION', 'pgsql')),
     'session_key' => 'erp_database',
-    'business_unit_session_key' => 'erp_business_unit_id',
     'default' => $default,
     'databases' => $databases,
     'maintenance_database' => env('ERP_MAINTENANCE_DATABASE', 'postgres'),

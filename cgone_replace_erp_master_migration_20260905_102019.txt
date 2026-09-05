@@ -1,0 +1,47 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260905102020
+Username: IT-LAPTOP\anton
+RunAs User: IT-LAPTOP\anton
+Configuration Name: 
+Machine: IT-LAPTOP (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 19572
+PSVersion: 5.1.26100.9278
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9278
+BuildVersion: 10.0.26100.9278
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+CGOne - Replace ERP Master Expansion Migration
+
+[OK] Backup: .\migration_backup_final_20260905_102019
+[OK] Migration utama sudah ditimpa dengan versi final.
+
+>>> PHP lint
+No syntax errors detected in .\database\migrations\2026_08_30_000200_expand_erp_master_fields.php
+
+>>> Clear cache
+
+   INFO  Clearing cached bootstrap files.
+
+  config ............................................................................................... 123.07ms DONE
+  cache ................................................................................................ 155.02ms DONE
+  compiled ............................................................................................... 4.47ms DONE
+  events ................................................................................................. 1.33ms DONE
+  routes ................................................................................................. 1.29ms DONE
+  views ................................................................................................ 103.36ms DONE
+
+>>> Audit duplicate migration
+[WARN] cgone_audit_duplicate_migrations.php tidak ditemukan.
+
+============================================================
+REPLACE MIGRATION SELESAI
+============================================================
+**********************
+Windows PowerShell transcript end
+End time: 20260905102023
+**********************

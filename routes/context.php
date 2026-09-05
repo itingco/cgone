@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\BusinessUnitSwitchController;
 use App\Http\Controllers\DatabaseManagementController;
 use App\Http\Controllers\DatabaseSwitchController;
 use App\Http\Controllers\Profile\ProfileController;
@@ -8,7 +7,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
     Route::post('/context/database', DatabaseSwitchController::class)->name('database.switch');
-    Route::post('/context/business-unit', BusinessUnitSwitchController::class)->name('business-unit.switch');
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');

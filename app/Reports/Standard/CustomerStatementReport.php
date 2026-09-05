@@ -1,0 +1,9 @@
+<?php
+namespace App\Reports\Standard;
+use App\Reports\Queries\CustomerLedgerReportQuery;use App\Services\Reports\Contracts\StandardReport;use App\Services\Reports\ReportResult;
+final class CustomerStatementReport extends AbstractStandardReport implements StandardReport{
+ public function __construct(private readonly CustomerLedgerReportQuery $ledger){}public function code():string{return 'CUSTOMER_STATEMENT';}
+ public function parameters():array{return array_merge($this->periodParameters(),['customer_id'=>$this->lookupParameter('Customer','customers')]);}
+ public function run(array $parameters):ReportResult{if(empty($parameters['customer_id']))return new ReportResult('Customer Statement',[$this->col('posting_at','Date','datetime'),$this->col('document_number','Document'),$this->col('debit','Debit','money'),$this->col('credit','Credit','money'),$this->col('running_balance','Balance','money')],[],notes:['Pilih Customer untuk membuka statement.']);$opening=$this->ledger->opening($parameters);$running=$opening;$rows=[];$debit=$credit=0.0;foreach($this->ledger->period($parameters)->orderBy('l.posting_at')->orderBy('l.id')->get() as $row){$debit+=(float)$row->debit;$credit+=(float)$row->credit;$running+=(float)$row->debit-(float)$row->credit;$row->running_balance=$running;$rows[]=$row;if(count($rows)>=(int)config('reports.screen_row_limit',5000))break;}
+  return new ReportResult('Customer Statement',[$this->col('posting_at','Date','datetime'),$this->col('document_number','Document'),$this->col('document_type','Type'),$this->col('business_unit','Business Unit'),$this->col('description','Description'),$this->col('debit','Debit','money'),$this->col('credit','Credit','money'),$this->col('running_balance','Balance','money')],$rows,['Opening Balance'=>$opening,'Closing Balance'=>$running],['debit'=>$debit,'credit'=>$credit,'running_balance'=>$running],metadata:['opening_balance'=>$opening,'closing_balance'=>$running]);}
+}

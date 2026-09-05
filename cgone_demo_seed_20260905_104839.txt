@@ -1,0 +1,67 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260905104839
+Username: IT-LAPTOP\anton
+RunAs User: IT-LAPTOP\anton
+Configuration Name: 
+Machine: IT-LAPTOP (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File .\cgone_recreate_demo_company.ps1
+Process ID: 5660
+PSVersion: 5.1.26100.9278
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9278
+BuildVersion: 10.0.26100.9278
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+CGOne Demo Company - Clean Recreate + Seed
+Started : 2026-09-05 10:48:39
+Folder  : C:\xampp82\htdocs\CG_One
+Database: cgone_demo2
+Company : PT CGOne Sample Indonesia
+
+>>> 1. Validasi migration sebelum recreate
+[OK] Ownership length/width sudah benar
+ERP SHA256 : 4A1D16A86B1593269888A00ACA70C36744C68DA99BB3064C9BB512392310FCF6
+REF SHA256 : B2BBA29B5AE47A90176D0D0F52FB77304B08D8FE1254D75D1F2FF050485CF86B
+
+>>> 2. PHP lint
+
+
+[OK] PHP lint PASS
+
+>>> 3. Clear Laravel cache
+
+[OK] Laravel cache clear
+
+>>> 4. Cari psql.exe
+[OK] psql ditemukan: C:\Program Files\PostgreSQL\18\bin\psql.exe
+
+>>> 5. Terminate semua koneksi ke [cgone_demo2]
+
+
+>>> 6. Drop database lama [cgone_demo2]
+
+[OK] Database lama sudah dihapus
+
+>>> 7. Pastikan database benar-benar sudah tidak ada
+[OK] cgone_demo2 benar-benar sudah tidak ada
+
+>>> 8. Create + initialize + seed sample company
+
+[OK] Sample company berhasil dibuat
+
+>>> 9. Cek database sudah ada
+[OK] Database [cgone_demo2] tersedia
+
+============================================================
+DEMO COMPANY BERHASIL
+Database : cgone_demo2
+Company  : PT CGOne Sample Indonesia
+============================================================
+**********************
+Windows PowerShell transcript end
+End time: 20260905104923
+**********************

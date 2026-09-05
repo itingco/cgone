@@ -22,8 +22,10 @@
 </div>
 <div class="row g-3 mb-3">
     <div class="col-md-8"><div class="card h-100"><div class="card-body"><div class="row g-3">
-        <div class="col-md-5"><div class="text-muted small">{{ $module==='sales'?'Customer':'Vendor' }}</div><div class="fw-semibold">{{ $module==='sales'?$record->customer?->code:$record->vendor?->code }} - {{ $module==='sales'?$record->customer?->name:$record->vendor?->name }}</div></div>
+        <div class="col-md-4"><div class="text-muted small">{{ $module==='sales'?'Customer':'Vendor' }}</div><div class="fw-semibold">{{ $module==='sales'?$record->customer?->code:$record->vendor?->code }} - {{ $module==='sales'?$record->customer?->name:$record->vendor?->name }}</div></div>
         <div class="col-md-2"><div class="text-muted small">Document Date</div><div>{{ $record->document_date?->format('d/m/Y') }}</div></div>
+        @if(in_array($type,['sales-invoice','purchase-invoice'],true))<div class="col-md-2"><div class="text-muted small">Due Date</div><div>{{ $record->due_date?->format('d/m/Y') ?? '-' }}</div></div>@endif
+        <div class="col-md-3"><div class="text-muted small">Business Unit</div><div>{{ $record->businessUnit?->code ? $record->businessUnit->code.' - '.$record->businessUnit->name : '-' }}</div></div>
         <div class="col-md-3"><div class="text-muted small">Location</div><div>{{ $record->location?->code ?? '-' }}@if($record->bin) / {{ $record->bin->code }}@endif</div></div>
         @if($module==='sales' && $record->priceLevel)<div class="col-md-2"><div class="text-muted small">Price Level</div><div>{{ $record->priceLevel->code }}</div></div>@endif
         <div class="col-12"><div class="text-muted small">Notes</div><div>{{ $record->notes ?: '-' }}</div></div>

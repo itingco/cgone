@@ -1,0 +1,23 @@
+CGOne Migration Duplicate Column Audit
+Generated : 2026-09-05 05:33:53
+Root      : C:\xampp82\htdocs\CG_One
+Migrations: 34
+==========================================================================================
+
+[OK] Tidak ditemukan duplicate table.column dari pola migration yang dikenali.
+==========================================================================================
+SPECIAL SEARCH
+
+COLUMN: billing_postal_code
+  customers.billing_postal_code -> 2026_08_30_000200_expand_reference_master_fields.php:67
+
+COLUMN: shipping_postal_code
+  customers.shipping_postal_code -> 2026_08_30_000200_expand_reference_master_fields.php:72
+
+COLUMN: length
+  items.length -> 2026_08_30_000200_expand_reference_master_fields.php:18
+
+COLUMN: width
+  user_dashboard_preferences.width -> 2026_08_28_100000_create_v4_erp_optimization.php:16
+  items.width -> 2026_08_30_000200_expand_reference_master_fields.php:20
+

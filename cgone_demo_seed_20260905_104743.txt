@@ -1,0 +1,63 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260905104743
+Username: IT-LAPTOP\anton
+RunAs User: IT-LAPTOP\anton
+Configuration Name: 
+Machine: IT-LAPTOP (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File .\cgone_recreate_demo_company.ps1
+Process ID: 14800
+PSVersion: 5.1.26100.9278
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9278
+BuildVersion: 10.0.26100.9278
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+CGOne Demo Company - Clean Recreate + Seed
+Started : 2026-09-05 10:47:43
+Folder  : C:\xampp82\htdocs\CG_One
+Database: cgone_demo2
+Company : PT CGOne Sample Indonesia
+
+>>> 1. Validasi migration sebelum recreate
+[OK] Ownership length/width sudah benar
+ERP SHA256 : 4A1D16A86B1593269888A00ACA70C36744C68DA99BB3064C9BB512392310FCF6
+REF SHA256 : B2BBA29B5AE47A90176D0D0F52FB77304B08D8FE1254D75D1F2FF050485CF86B
+
+>>> 2. PHP lint
+No syntax errors detected in .\database\migrations\2026_08_30_000200_expand_erp_master_fields.php
+No syntax errors detected in .\database\migrations\2026_08_30_000200_expand_reference_master_fields.php
+[OK] PHP lint PASS
+
+>>> 3. Clear Laravel cache
+
+   INFO  Clearing cached bootstrap files.
+
+  config ................................................................................................. 3.69ms DONE
+  cache .................................................................................................. 5.05ms DONE
+  compiled ............................................................................................... 4.22ms DONE
+  events ................................................................................................. 1.44ms DONE
+  routes ................................................................................................. 1.41ms DONE
+  views ................................................................................................. 15.83ms DONE
+[OK] Laravel cache clear
+
+>>> 4. Cari psql.exe
+[OK] psql ditemukan: C:\Program Files\PostgreSQL\18\bin\psql.exe
+
+>>> 5. Terminate semua koneksi ke [cgone_demo2]
+psql: error: connection to server at "127.0.0.1", port 5432 failed: FATAL:  password authentication fa
+iled for user "postgres"
+[FAIL] Terminate connection gagal.
+PS>TerminatingError(): "Terminate connection gagal."
+
+==========================================
+ERROR
+Terminate connection gagal.
+==========================================
+**********************
+Windows PowerShell transcript end
+End time: 20260905104828
+**********************

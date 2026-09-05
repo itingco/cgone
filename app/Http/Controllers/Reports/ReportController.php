@@ -1,35 +1,96 @@
 <?php
+
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
-use App\Models\Documents\{PostedReceipt,PostedShipment,PurchaseOrder,SalesOrder};
-use App\Services\Documents\PartialQuantityService;
 use App\Services\Security\MenuAuthorizationService;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\RedirectResponse;
 
 class ReportController extends Controller
 {
-    public function __construct(private MenuAuthorizationService $authz, private PartialQuantityService $partial) {}
-    private function allow(string $code): void { abort_unless($this->authz->allows(auth()->user(),$code,'view'),403); }
-    private function view(string $title,array $columns,$rows,string $note=''){return view('reports.table',compact('title','columns','rows','note'));}
+    public function __construct(private readonly MenuAuthorizationService $authz)
+    {
+    }
 
-    public function salesHistory(){ $this->allow('sales.history');$rows=DB::table('posted_sales_invoices')->select('document_no','source_document_no','document_date','grand_total','posted_at')->orderByDesc('posted_at')->limit(500)->get();return $this->view('Sales History',['document_no'=>'Posted Invoice','source_document_no'=>'Source Invoice','document_date'=>'Date','grand_total'=>'Total','posted_at'=>'Posted At'],$rows); }
-    public function salesOutstandingOrders(){ $this->allow('sales.outstanding-orders');$out=[];foreach(SalesOrder::with(['customer','lines.item'])->where('status','RELEASED')->get() as $order)foreach($order->lines as $line){$remaining=(float)$this->partial->remainingSalesOrderLine($line);if($remaining>0)$out[]=(object)['document_no'=>$order->document_no,'customer'=>$order->customer?->code.' - '.$order->customer?->name,'item'=>$line->item?->code,'ordered'=>$line->quantity,'remaining'=>$remaining];}return $this->view('Outstanding Sales Orders',['document_no'=>'Sales Order','customer'=>'Customer','item'=>'Item','ordered'=>'Ordered','remaining'=>'Remaining'],$out); }
-    public function salesOutstandingShipments(){ $this->allow('sales.outstanding-shipments');$out=[];foreach(PostedShipment::with(['customer','lines.item','undo'])->get() as $doc){if($doc->effectiveStatus()!=='POSTED')continue;foreach($doc->lines as $line){$remaining=(float)$this->partial->remainingPostedShipmentLine($line->id,(float)$line->quantity);if($remaining>0)$out[]=(object)['document_no'=>$doc->document_no,'customer'=>$doc->customer?->code.' - '.$doc->customer?->name,'item'=>$line->item_code,'shipped'=>$line->quantity,'uninvoiced'=>$remaining];}}return $this->view('Outstanding Shipments',['document_no'=>'Posted Shipment','customer'=>'Customer','item'=>'Item','shipped'=>'Shipped','uninvoiced'=>'Uninvoiced'],$out); }
-    public function customerAging(){ $this->allow('sales.customer-aging');$rows=DB::table('customer_ledgers as l')->join('customers as c','c.id','=','l.customer_id')->select('c.code','c.name')->selectRaw('SUM(l.debit-l.credit) AS balance')->selectRaw('MAX(l.posting_at) AS last_posting')->groupBy('c.code','c.name')->havingRaw('ABS(SUM(l.debit-l.credit)) > 0.0001')->orderBy('c.code')->get();return $this->view('Customer Outstanding / Aging Base',['code'=>'Customer','name'=>'Name','balance'=>'Outstanding','last_posting'=>'Last Posting'],$rows,'Current ledger balance is shown. Aging buckets can be added after payment terms/due-date fields are enabled.'); }
+    private function go(string $legacyMenu, string $reportCode): RedirectResponse
+    {
+        abort_unless($this->authz->allows(auth()->user(), $legacyMenu, 'view'), 403);
 
-    public function purchaseHistory(){ $this->allow('purchase.history');$rows=DB::table('posted_purchase_invoices')->select('document_no','source_document_no','document_date','grand_total','posted_at')->orderByDesc('posted_at')->limit(500)->get();return $this->view('Purchase History',['document_no'=>'Posted Invoice','source_document_no'=>'Source Invoice','document_date'=>'Date','grand_total'=>'Total','posted_at'=>'Posted At'],$rows); }
-    public function purchaseOutstandingOrders(){ $this->allow('purchase.outstanding-orders');$out=[];foreach(PurchaseOrder::with(['vendor','lines.item'])->where('status','RELEASED')->get() as $order)foreach($order->lines as $line){$remaining=(float)$this->partial->remainingPurchaseOrderLine($line);if($remaining>0)$out[]=(object)['document_no'=>$order->document_no,'vendor'=>$order->vendor?->code.' - '.$order->vendor?->name,'item'=>$line->item?->code,'ordered'=>$line->quantity,'remaining'=>$remaining];}return $this->view('Outstanding Purchase Orders',['document_no'=>'Purchase Order','vendor'=>'Vendor','item'=>'Item','ordered'=>'Ordered','remaining'=>'Remaining'],$out); }
-    public function purchaseOutstandingReceipts(){ $this->allow('purchase.outstanding-receipts');$out=[];foreach(PostedReceipt::with(['vendor','lines.item','undo'])->get() as $doc){if($doc->effectiveStatus()!=='POSTED')continue;foreach($doc->lines as $line){$remaining=(float)$this->partial->remainingPostedReceiptLine($line->id,(float)$line->quantity);if($remaining>0)$out[]=(object)['document_no'=>$doc->document_no,'vendor'=>$doc->vendor?->code.' - '.$doc->vendor?->name,'item'=>$line->item_code,'received'=>$line->quantity,'uninvoiced'=>$remaining];}}return $this->view('Outstanding Receipts',['document_no'=>'Posted Receipt','vendor'=>'Vendor','item'=>'Item','received'=>'Received','uninvoiced'=>'Uninvoiced'],$out); }
-    public function vendorAging(){ $this->allow('purchase.vendor-aging');$rows=DB::table('vendor_ledgers as l')->join('vendors as v','v.id','=','l.vendor_id')->select('v.code','v.name')->selectRaw('SUM(l.credit-l.debit) AS balance')->selectRaw('MAX(l.posting_at) AS last_posting')->groupBy('v.code','v.name')->havingRaw('ABS(SUM(l.credit-l.debit)) > 0.0001')->orderBy('v.code')->get();return $this->view('Vendor Outstanding / Aging Base',['code'=>'Vendor','name'=>'Name','balance'=>'Outstanding','last_posting'=>'Last Posting'],$rows,'Current ledger balance is shown. Aging buckets can be added after payment terms/due-date fields are enabled.'); }
+        return redirect()->route('reports.run', ['report' => $reportCode]);
+    }
 
-    public function stockAvailability(){ $this->allow('inventory.stock-availability');$rows=DB::table('item_ledgers as l')->join('items as i','i.id','=','l.item_id')->join('warehouses as w','w.id','=','l.warehouse_id')->select('i.code as item','i.name','w.code as warehouse')->selectRaw('SUM(l.qty_in-l.qty_out) AS quantity')->groupBy('i.code','i.name','w.code')->orderBy('i.code')->get();return $this->view('Stock Availability',['item'=>'Item','name'=>'Name','warehouse'=>'Warehouse','quantity'=>'Available Qty'],$rows); }
-    public function stockMovement(){ $this->allow('inventory.stock-movement');$rows=DB::table('item_ledgers as l')->join('items as i','i.id','=','l.item_id')->join('warehouses as w','w.id','=','l.warehouse_id')->select('l.posting_at','l.document_number','i.code as item','w.code as warehouse','l.qty_in','l.qty_out','l.amount')->orderByDesc('l.posting_at')->limit(1000)->get();return $this->view('Stock Movement',['posting_at'=>'Posting At','document_number'=>'Document','item'=>'Item','warehouse'=>'Warehouse','qty_in'=>'Qty In','qty_out'=>'Qty Out','amount'=>'Amount'],$rows); }
-    public function stockValuation(){ $this->allow('inventory.stock-valuation');$rows=DB::table('item_ledgers as l')->join('items as i','i.id','=','l.item_id')->join('warehouses as w','w.id','=','l.warehouse_id')->select('i.code as item','i.name','w.code as warehouse')->selectRaw('SUM(l.qty_in-l.qty_out) AS quantity')->selectRaw('SUM(l.amount) AS value')->groupBy('i.code','i.name','w.code')->orderBy('i.code')->get();return $this->view('Stock Valuation',['item'=>'Item','name'=>'Name','warehouse'=>'Warehouse','quantity'=>'Qty','value'=>'Ledger Value'],$rows); }
+    public function salesHistory(): RedirectResponse
+    {
+        return $this->go('sales.history', 'SALES_HISTORY');
+    }
 
-    public function journal(){ $this->allow('finance.journal');$rows=DB::table('gl_batches')->select('document_number','posting_at','source_module','document_type','description')->orderByDesc('posting_at')->limit(1000)->get();return $this->view('Journal / GL Batches',['document_number'=>'Document','posting_at'=>'Posting At','source_module'=>'Source','document_type'=>'Type','description'=>'Description'],$rows); }
-    public function trialBalance(){ $this->allow('finance.trial-balance');return $this->financial('Trial Balance',null); }
-    public function balanceSheet(){ $this->allow('finance.balance-sheet');return $this->financial('Balance Sheet',['ASSET','LIABILITY','EQUITY']); }
-    public function profitLoss(){ $this->allow('finance.profit-loss');return $this->financial('Profit & Loss',['REVENUE','INCOME','EXPENSE','COGS']); }
-    private function financial(string $title,?array $types){$q=DB::table('gl_entries as e')->join('chart_of_accounts as a','a.id','=','e.account_id')->select('a.code','a.name','a.account_type')->selectRaw('SUM(e.debit) AS debit')->selectRaw('SUM(e.credit) AS credit')->selectRaw('SUM(e.debit-e.credit) AS balance')->groupBy('a.code','a.name','a.account_type')->orderBy('a.code');if($types)$q->whereIn(DB::raw('UPPER(a.account_type)'),$types);return $this->view($title,['code'=>'Account','name'=>'Name','account_type'=>'Type','debit'=>'Debit','credit'=>'Credit','balance'=>'Debit - Credit'],$q->get());}
+    public function salesOutstandingOrders(): RedirectResponse
+    {
+        return $this->go('sales.outstanding-orders', 'SALES_OUTSTANDING_ORDERS');
+    }
+
+    public function salesOutstandingShipments(): RedirectResponse
+    {
+        return $this->go('sales.outstanding-shipments', 'SALES_OUTSTANDING_SHIPMENTS');
+    }
+
+    public function customerAging(): RedirectResponse
+    {
+        return $this->go('sales.customer-aging', 'CUSTOMER_AGING');
+    }
+
+    public function purchaseHistory(): RedirectResponse
+    {
+        return $this->go('purchase.history', 'PURCHASE_HISTORY');
+    }
+
+    public function purchaseOutstandingOrders(): RedirectResponse
+    {
+        return $this->go('purchase.outstanding-orders', 'PURCHASE_OUTSTANDING_ORDERS');
+    }
+
+    public function purchaseOutstandingReceipts(): RedirectResponse
+    {
+        return $this->go('purchase.outstanding-receipts', 'PURCHASE_OUTSTANDING_RECEIPTS');
+    }
+
+    public function vendorAging(): RedirectResponse
+    {
+        return $this->go('purchase.vendor-aging', 'VENDOR_AGING');
+    }
+
+    public function stockAvailability(): RedirectResponse
+    {
+        return $this->go('inventory.stock-availability', 'STOCK_AVAILABILITY');
+    }
+
+    public function stockMovement(): RedirectResponse
+    {
+        return $this->go('inventory.stock-movement', 'STOCK_MOVEMENT');
+    }
+
+    public function stockValuation(): RedirectResponse
+    {
+        return $this->go('inventory.stock-valuation', 'STOCK_VALUATION');
+    }
+
+    public function journal(): RedirectResponse
+    {
+        return $this->go('finance.journal', 'JOURNAL_REGISTER');
+    }
+
+    public function trialBalance(): RedirectResponse
+    {
+        return $this->go('finance.trial-balance', 'TRIAL_BALANCE');
+    }
+
+    public function balanceSheet(): RedirectResponse
+    {
+        return $this->go('finance.balance-sheet', 'BALANCE_SHEET');
+    }
+
+    public function profitLoss(): RedirectResponse
+    {
+        return $this->go('finance.profit-loss', 'PROFIT_LOSS');
+    }
 }

@@ -25,10 +25,6 @@
             'more' => [
                 ['sales.posted-shipment','Posted Shipments',route('posted.index','shipment')],
                 ['sales.posted-invoice','Posted Sales Invoices',route('posted.index','sales-invoice')],
-                ['sales.history','Sales History',route('reports.sales.history')],
-                ['sales.outstanding-orders','Outstanding Orders',route('reports.sales.outstanding-orders')],
-                ['sales.outstanding-shipments','Outstanding Shipments',route('reports.sales.outstanding-shipments')],
-                ['sales.customer-aging','Customer Aging',route('reports.sales.customer-aging')],
             ],
         ],
         'purchase' => [
@@ -43,10 +39,6 @@
             'more' => [
                 ['purchase.posted-receipt','Posted Receipts',route('posted.index','receipt')],
                 ['purchase.posted-invoice','Posted Purchase Invoices',route('posted.index','purchase-invoice')],
-                ['purchase.history','Purchase History',route('reports.purchase.history')],
-                ['purchase.outstanding-orders','Outstanding Orders',route('reports.purchase.outstanding-orders')],
-                ['purchase.outstanding-receipts','Outstanding Receipts',route('reports.purchase.outstanding-receipts')],
-                ['purchase.vendor-aging','Vendor Aging',route('reports.purchase.vendor-aging')],
             ],
         ],
         'inventory' => [
@@ -60,9 +52,6 @@
             ],
             'more' => [
                 ['transactions.adjustment','Inventory Adjustment',route('adjustments.index')],
-                ['inventory.stock-availability','Stock Availability',route('reports.inventory.stock-availability')],
-                ['inventory.stock-movement','Stock Movement',route('reports.inventory.stock-movement')],
-                ['inventory.stock-valuation','Stock Valuation',route('reports.inventory.stock-valuation')],
             ],
         ],
         'pricing' => [
@@ -81,12 +70,39 @@
                 ['master.coa','Chart of Accounts',route('master.coa.index')],
                 ['ledger.gl','General Ledger Entries',route('ledger.gl.index')],
             ],
-            'more' => [
-                ['finance.journal','Journal',route('reports.finance.journal')],
-                ['finance.trial-balance','Trial Balance',route('reports.finance.trial-balance')],
-                ['finance.balance-sheet','Balance Sheet',route('reports.finance.balance-sheet')],
-                ['finance.profit-loss','Profit & Loss',route('reports.finance.profit-loss')],
+            'more' => [],
+        ],
+        'human-capital' => [
+            'label' => 'Human Capital',
+            'primary' => [
+                ['hr.employees','Employees',route('hr.employees.index')],
+                ['hr.allocations','Employee Allocations',route('hr.allocations.index')],
+                ['hr.departments','Departments',route('hr.organization.index','departments')],
+                ['hr.positions','Positions / Job Titles',route('hr.organization.index','positions')],
+                ['hr.office-locations','Office Locations',route('hr.organization.index','office-locations')],
+                ['hr.payroll-groups','Payroll Groups',route('hr.organization.index','payroll-groups')],
+                ['hr.shifts','Shifts',route('hr.shifts.index')],
+                ['hr.schedules','Work Schedules',route('hr.schedules.index')],
+                ['hr.attendance','Attendance',route('hr.attendance.index')],
+                ['hr.leave','Leave / Permission',route('hr.leave.index')],
+                ['hr.overtime','Overtime',route('hr.overtime.index')],
             ],
+            'more' => [
+                ['hr.sub-departments','Sub Departments',route('hr.organization.index','sub-departments')],
+                ['hr.levels','Employee Levels',route('hr.organization.index','levels')],
+                ['hr.groups','Employee Groups',route('hr.organization.index','groups')],
+                ['hr.workgroups','Workgroups',route('hr.organization.index','workgroups')],
+                ['hr.teams','Teams',route('hr.organization.index','teams')],
+                ['hr.attendance-corrections','Attendance Corrections',route('hr.attendance-corrections.index')],
+                ['hr.holidays','Holiday Calendar',route('hr.holidays.index')],
+            ],
+        ],
+        'reports' => [
+            'label' => 'Reports',
+            'primary' => [
+                ['reports.center','Report Center',route('reports.center')],
+            ],
+            'more' => [],
         ],
         'master' => [
             'label' => 'Master Data',
@@ -109,6 +125,7 @@
                 ['config.numbering','Number Series',route('config.numbering.index')],
             ],
             'more' => [
+                ['config.transaction-templates','Transaction Templates',route('transaction-templates.index')],
                 ['config.posting-setup','Posting Setup',route('config.posting-setup.index')],
                 ['config.permissions','Permissions',route('config.permissions.index')],
                 ['config.settings','System Settings',route('config.settings.index')],
@@ -126,24 +143,6 @@
 <div class="d-flex app-shell" id="appShell">
     <aside class="sidebar p-3">
         <div class="sidebar-brand"><div class="brand-dot">CG</div><span>CGOne ERP</span></div>
-
-        @if(isset($erpBusinessUnits) && $erpBusinessUnits->isNotEmpty())
-            <div class="context-box">
-                <div class="context-row">
-                    <div class="context-label"><span>Business Unit</span></div>
-                    <form method="post" action="{{ route('business-unit.switch') }}">
-                        @csrf
-                        <select class="context-select" name="business_unit_id" onchange="this.form.submit()" aria-label="Active business unit">
-                            @foreach($erpBusinessUnits as $businessUnit)
-                                <option value="{{ $businessUnit->id }}" @selected((int)($activeBusinessUnitId ?? 0) === (int)$businessUnit->id)>
-                                    {{ $businessUnit->code }} - {{ $businessUnit->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </form>
-                </div>
-            </div>
-        @endif
 
         <div class="sidebar-search-wrap"><span class="search-icon">⌕</span><input id="sidebar-search" class="sidebar-search" placeholder="Search menu..." autocomplete="off"></div>
         @if($authz->allows(auth()->user(),'dashboard','view'))

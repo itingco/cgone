@@ -10,19 +10,119 @@ use App\Services\System\DocumentSequenceService;
 use DomainException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-class PostedDocumentUndoService {
- public function __construct(private DocumentSequenceService $numbers,private ItemLedgerService $items,private CustomerLedgerService $customers,private VendorLedgerService $vendors,private GeneralLedgerService $gl,private DocumentStateService $states,private ActivityLogService $audit){}
- public function undo(Model $posted,string $reason,int $userId):PostedDocumentUndo{return DB::transaction(function()use($posted,$reason,$userId){$type=class_basename($posted);$documentType=match($type){'PostedShipment'=>'POSTED_SHIPMENT','PostedSalesInvoice'=>'POSTED_SALES_INVOICE','PostedReceipt'=>'POSTED_RECEIPT','PostedPurchaseInvoice'=>'POSTED_PURCHASE_INVOICE',default=>throw new DomainException('Unsupported posted document type.')};if(PostedDocumentUndo::where(['posted_type'=>$type,'posted_id'=>$posted->id])->exists())throw new DomainException('This posted document has already been undone.');$this->assertNoActiveDownstream($posted,$type);$undoNo=$this->numbers->next('UNDO');$source=$posted->source()->lockForUpdate()->firstOrFail();$itemRows=ItemLedger::where('document_number',$posted->document_no)->where('document_type',$documentType)->get();foreach($itemRows as $row)$this->items->post(['posting_at'=>now(),'source_module'=>'undo','document_type'=>'UNDO','document_number'=>$undoNo,'item_id'=>$row->item_id,'warehouse_id'=>$row->warehouse_id,'location_id'=>$row->location_id,'bin_id'=>$row->bin_id,'qty_in'=>$row->qty_out,'qty_out'=>$row->qty_in,'unit_cost'=>$row->unit_cost,'amount'=>-(float)$row->amount,'description'=>"UNDO {$posted->document_no}: {$reason}",'posted_by'=>$userId,'reversal_of_id'=>$row->id]);foreach(CustomerLedger::where('document_number',$posted->document_no)->where('document_type',$documentType)->get() as $row)$this->customers->post(['posting_at'=>now(),'source_module'=>'undo','document_type'=>'UNDO','document_number'=>$undoNo,'customer_id'=>$row->customer_id,'debit'=>$row->credit,'credit'=>$row->debit,'description'=>"UNDO {$posted->document_no}: {$reason}",'posted_by'=>$userId,'reversal_of_id'=>$row->id]);foreach(VendorLedger::where('document_number',$posted->document_no)->where('document_type',$documentType)->get() as $row)$this->vendors->post(['posting_at'=>now(),'source_module'=>'undo','document_type'=>'UNDO','document_number'=>$undoNo,'vendor_id'=>$row->vendor_id,'debit'=>$row->credit,'credit'=>$row->debit,'description'=>"UNDO {$posted->document_no}: {$reason}",'posted_by'=>$userId,'reversal_of_id'=>$row->id]);$original=GlBatch::with('entries')->where('document_number',$posted->document_no)->where('document_type',$documentType)->first();$reversal=null;if($original){$lines=$original->entries->map(fn($e)=>['account_id'=>$e->account_id,'debit'=>(float)$e->credit,'credit'=>(float)$e->debit,'description'=>"UNDO {$posted->document_no}",'reversal_of_id'=>$e->id])->all();$reversal=$this->gl->postBatch(['document_number'=>$undoNo,'posting_at'=>now(),'source_module'=>'undo','document_type'=>'UNDO','description'=>"UNDO {$posted->document_no}: {$reason}",'posted_by'=>$userId,'reversal_of_id'=>$original->id],$lines);}$undo=PostedDocumentUndo::create(['posted_type'=>$type,'posted_id'=>$posted->id,'reversal_document_no'=>$undoNo,'reversal_gl_batch_id'=>$reversal?->id,'undone_by'=>$userId,'undone_at'=>now(),'reason'=>$reason]);$this->states->markUndo($source,$userId);$this->audit->record('posted-documents','undo',$undo,[],$undo->toArray(),['document_number'=>$posted->document_no,'undo_number'=>$undoNo]);return $undo;});}
 
- private function assertNoActiveDownstream(Model $posted,string $type): void {
-  if($type==='PostedShipment'){
-   $active=DB::table('posted_sales_invoice_lines as il')->join('posted_shipment_lines as sl','sl.id','=','il.source_posted_shipment_line_id')->join('posted_sales_invoices as ih','ih.id','=','il.posted_sales_invoice_id')->leftJoin('posted_document_undos as u',function($j){$j->on('u.posted_id','=','ih.id')->where('u.posted_type','=','PostedSalesInvoice');})->where('sl.posted_shipment_id',$posted->id)->whereNull('u.id')->exists();
-   if($active)throw new DomainException('Undo the dependent Posted Sales Invoice before undoing this Posted Shipment.');
-  }
-  if($type==='PostedReceipt'){
-   $active=DB::table('posted_purchase_invoice_lines as il')->join('posted_receipt_lines as rl','rl.id','=','il.source_posted_receipt_line_id')->join('posted_purchase_invoices as ih','ih.id','=','il.posted_purchase_invoice_id')->leftJoin('posted_document_undos as u',function($j){$j->on('u.posted_id','=','ih.id')->where('u.posted_type','=','PostedPurchaseInvoice');})->where('rl.posted_receipt_id',$posted->id)->whereNull('u.id')->exists();
-   if($active)throw new DomainException('Undo the dependent Posted Purchase Invoice before undoing this Posted Receipt.');
-  }
- }
- public function resolve(string $type,int $id):Model{$map=['shipment'=>PostedShipment::class,'sales-invoice'=>PostedSalesInvoice::class,'receipt'=>PostedReceipt::class,'purchase-invoice'=>PostedPurchaseInvoice::class];$class=$map[$type]??throw new DomainException('Unknown posted document type.');return $class::findOrFail($id);}
+class PostedDocumentUndoService
+{
+    public function __construct(
+        private DocumentSequenceService $numbers,
+        private ItemLedgerService $items,
+        private CustomerLedgerService $customers,
+        private VendorLedgerService $vendors,
+        private GeneralLedgerService $gl,
+        private DocumentStateService $states,
+        private ActivityLogService $audit,
+    ) {}
+
+    public function undo(Model $posted,string $reason,int $userId): PostedDocumentUndo
+    {
+        return DB::transaction(function() use($posted,$reason,$userId){
+            $type=class_basename($posted);
+            $documentType=match($type){
+                'PostedShipment'=>'POSTED_SHIPMENT',
+                'PostedSalesInvoice'=>'POSTED_SALES_INVOICE',
+                'PostedReceipt'=>'POSTED_RECEIPT',
+                'PostedPurchaseInvoice'=>'POSTED_PURCHASE_INVOICE',
+                default=>throw new DomainException('Unsupported posted document type.'),
+            };
+
+            if(PostedDocumentUndo::where(['posted_type'=>$type,'posted_id'=>$posted->id])->exists()) {
+                throw new DomainException('This posted document has already been undone.');
+            }
+
+            $this->assertNoActiveDownstream($posted,$type);
+            $undoNo=$this->numbers->next('UNDO');
+            $source=$posted->source()->lockForUpdate()->firstOrFail();
+
+            foreach(ItemLedger::where('document_number',$posted->document_no)->where('document_type',$documentType)->get() as $row){
+                $this->items->post([
+                    'posting_at'=>now(),'source_module'=>'undo','document_type'=>'UNDO','document_number'=>$undoNo,
+                    'item_id'=>$row->item_id,'warehouse_id'=>$row->warehouse_id,'location_id'=>$row->location_id,'bin_id'=>$row->bin_id,
+                    'business_unit_id'=>$row->business_unit_id,'qty_in'=>$row->qty_out,'qty_out'=>$row->qty_in,'unit_cost'=>$row->unit_cost,
+                    'amount'=>-(float)$row->amount,'description'=>"UNDO {$posted->document_no}: {$reason}",'posted_by'=>$userId,'reversal_of_id'=>$row->id,
+                ]);
+            }
+
+            foreach(CustomerLedger::where('document_number',$posted->document_no)->where('document_type',$documentType)->get() as $row){
+                $this->customers->post([
+                    'posting_at'=>now(),'source_module'=>'undo','document_type'=>'UNDO','document_number'=>$undoNo,
+                    'customer_id'=>$row->customer_id,'business_unit_id'=>$row->business_unit_id,'debit'=>$row->credit,'credit'=>$row->debit,
+                    'description'=>"UNDO {$posted->document_no}: {$reason}",'posted_by'=>$userId,'reversal_of_id'=>$row->id,
+                ]);
+            }
+
+            foreach(VendorLedger::where('document_number',$posted->document_no)->where('document_type',$documentType)->get() as $row){
+                $this->vendors->post([
+                    'posting_at'=>now(),'source_module'=>'undo','document_type'=>'UNDO','document_number'=>$undoNo,
+                    'vendor_id'=>$row->vendor_id,'business_unit_id'=>$row->business_unit_id,'debit'=>$row->credit,'credit'=>$row->debit,
+                    'description'=>"UNDO {$posted->document_no}: {$reason}",'posted_by'=>$userId,'reversal_of_id'=>$row->id,
+                ]);
+            }
+
+            $original=GlBatch::with('entries')->where('document_number',$posted->document_no)->where('document_type',$documentType)->first();
+            $reversal=null;
+            if($original){
+                $lines=$original->entries->map(fn($e)=>[
+                    'account_id'=>$e->account_id,'debit'=>(float)$e->credit,'credit'=>(float)$e->debit,
+                    'description'=>"UNDO {$posted->document_no}",'reversal_of_id'=>$e->id,
+                ])->all();
+                $reversal=$this->gl->postBatch([
+                    'document_number'=>$undoNo,'posting_at'=>now(),'source_module'=>'undo','document_type'=>'UNDO',
+                    'description'=>"UNDO {$posted->document_no}: {$reason}",'posted_by'=>$userId,
+                    'business_unit_id'=>$original->business_unit_id,'reversal_of_id'=>$original->id,
+                ],$lines);
+            }
+
+            $undo=PostedDocumentUndo::create([
+                'posted_type'=>$type,'posted_id'=>$posted->id,'reversal_document_no'=>$undoNo,
+                'reversal_gl_batch_id'=>$reversal?->id,'undone_by'=>$userId,'undone_at'=>now(),'reason'=>$reason,
+            ]);
+            $this->states->markUndo($source,$userId);
+            $this->audit->record('posted-documents','undo',$undo,[],$undo->toArray(),[
+                'document_number'=>$posted->document_no,'undo_number'=>$undoNo,
+            ]);
+            return $undo;
+        });
+    }
+
+    private function assertNoActiveDownstream(Model $posted,string $type): void
+    {
+        if($type==='PostedShipment'){
+            $active=DB::table('posted_sales_invoice_lines as il')
+                ->join('posted_shipment_lines as sl','sl.id','=','il.source_posted_shipment_line_id')
+                ->join('posted_sales_invoices as ih','ih.id','=','il.posted_sales_invoice_id')
+                ->leftJoin('posted_document_undos as u',function($j){$j->on('u.posted_id','=','ih.id')->where('u.posted_type','=','PostedSalesInvoice');})
+                ->where('sl.posted_shipment_id',$posted->id)->whereNull('u.id')->exists();
+            if($active) throw new DomainException('Undo the dependent Posted Sales Invoice before undoing this Posted Shipment.');
+        }
+        if($type==='PostedReceipt'){
+            $active=DB::table('posted_purchase_invoice_lines as il')
+                ->join('posted_receipt_lines as rl','rl.id','=','il.source_posted_receipt_line_id')
+                ->join('posted_purchase_invoices as ih','ih.id','=','il.posted_purchase_invoice_id')
+                ->leftJoin('posted_document_undos as u',function($j){$j->on('u.posted_id','=','ih.id')->where('u.posted_type','=','PostedPurchaseInvoice');})
+                ->where('rl.posted_receipt_id',$posted->id)->whereNull('u.id')->exists();
+            if($active) throw new DomainException('Undo the dependent Posted Purchase Invoice before undoing this Posted Receipt.');
+        }
+    }
+
+    public function resolve(string $type,int $id): Model
+    {
+        $map=[
+            'shipment'=>PostedShipment::class,
+            'sales-invoice'=>PostedSalesInvoice::class,
+            'receipt'=>PostedReceipt::class,
+            'purchase-invoice'=>PostedPurchaseInvoice::class,
+        ];
+        $class=$map[$type]??throw new DomainException('Unknown posted document type.');
+        return $class::findOrFail($id);
+    }
 }

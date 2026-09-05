@@ -4,7 +4,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h4 class="mb-0">General Ledger</h4>
-        <div class="small text-muted">GL batches and entries are immutable after posting. Business Unit mengikuti konteks BU aktif saat posting.</div>
+        <div class="small text-muted">GL batches and entries are immutable after posting. Business Unit berasal dari record sumber/posting dan tidak memakai konteks BU global.</div>
     </div>
 </div>
 

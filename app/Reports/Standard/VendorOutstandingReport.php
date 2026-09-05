@@ -1,0 +1,7 @@
+<?php
+namespace App\Reports\Standard;
+use App\Services\Reports\Contracts\StandardReport;use App\Services\Reports\ReportResult;use Illuminate\Support\Facades\DB;
+final class VendorOutstandingReport extends AbstractStandardReport implements StandardReport{
+ public function code():string{return 'VENDOR_OUTSTANDING';}public function parameters():array{return array_merge($this->asOfParameters(),['vendor_id'=>$this->lookupParameter('Vendor','vendors')]);}
+ public function run(array $p):ReportResult{$q=DB::table('vendor_ledgers as l')->join('vendors as v','v.id','=','l.vendor_id')->leftJoin('business_units as bu','bu.id','=','l.business_unit_id')->select('v.code','v.name','v.credit_limit','bu.code as business_unit')->selectRaw('SUM(l.credit-l.debit) AS balance')->selectRaw('MAX(l.posting_at) AS last_posting')->where('l.status','POSTED');$this->applyAsOf($q,'l.posting_at',$p);$this->applyBusinessUnit($q,'l.business_unit_id',$p);if(!empty($p['vendor_id']))$q->where('l.vendor_id',(int)$p['vendor_id']);$rows=$q->groupBy('v.code','v.name','v.credit_limit','bu.code')->havingRaw('ABS(SUM(l.credit-l.debit))>0.0001')->orderBy('v.code')->get()->all();return new ReportResult('Vendor Outstanding',[$this->col('code','Vendor'),$this->col('name','Name'),$this->col('business_unit','Business Unit'),$this->col('balance','Outstanding','money'),$this->col('credit_limit','Credit Limit','money'),$this->col('last_posting','Last Posting','datetime')],$rows,['Outstanding'=>$this->moneySum($rows,'balance')],['balance'=>$this->moneySum($rows,'balance')]);}
+}

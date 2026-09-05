@@ -1,0 +1,66 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260905095016
+Username: IT-LAPTOP\anton
+RunAs User: IT-LAPTOP\anton
+Configuration Name: 
+Machine: IT-LAPTOP (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 19972
+PSVersion: 5.1.26100.9278
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9278
+BuildVersion: 10.0.26100.9278
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+CGOne - Fix ALL Duplicate Migration Columns
+Started : 2026-09-05 09:50:16
+Folder  : C:\xampp82\htdocs\CG_One
+
+>>> 1. Backup dua migration
+[OK] Backup: .\migration_backup_all_duplicates_20260905_095016
+
+>>> 2. Duplicate yang akan diperbaiki
+  - customers.billing_postal_code
+  - customers.currency_code
+  - customers.fax
+  - customers.shipping_postal_code
+  - customers.website
+  - vendors.currency_code
+  - vendors.fax
+  - vendors.website
+
+>>> 3. Patch expand_erp_master_fields.php
+  customers.billing_postal_code: block tidak ditemukan / sudah dihapus
+  customers.currency_code: block tidak ditemukan / sudah dihapus
+  customers.fax: block tidak ditemukan / sudah dihapus
+  customers.shipping_postal_code: block tidak ditemukan / sudah dihapus
+  customers.website: block tidak ditemukan / sudah dihapus
+  vendors.currency_code: block tidak ditemukan / sudah dihapus
+  vendors.fax: block tidak ditemukan / sudah dihapus
+  vendors.website: block tidak ditemukan / sudah dihapus
+[OK] ERP migration selesai dipatch
+
+>>> 4. Verifikasi ownership
+customers.billing_postal_code: ERP=1 REF=1
+customers.currency_code: ERP=2 REF=2
+customers.fax: ERP=2 REF=2
+customers.shipping_postal_code: ERP=1 REF=1
+customers.website: ERP=2 REF=2
+vendors.currency_code: ERP=2 REF=2
+vendors.fax: ERP=2 REF=2
+vendors.website: ERP=2 REF=2
+[FAIL] Verifikasi ownership duplicate column gagal.
+PS>TerminatingError(): "Verifikasi ownership duplicate column gagal."
+
+==========================================
+ERROR SCRIPT
+Verifikasi ownership duplicate column gagal.
+==========================================
+**********************
+Windows PowerShell transcript end
+End time: 20260905095016
+**********************

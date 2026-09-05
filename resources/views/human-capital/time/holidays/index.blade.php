@@ -1,0 +1,5 @@
+@extends('layouts.app')
+@section('title','Holiday Calendar')
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-3"><div><h4 class="mb-1">Holiday Calendar</h4><div class="small text-muted">Calendar reference for schedule and payroll processing. It does not silently overwrite an employee date override.</div></div><a class="btn btn-primary" href="{{ route('hr.holidays.create') }}">+ New Holiday</a></div><div class="card"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Date</th><th>Name</th><th>Paid</th><th>Status</th><th>Notes</th><th></th></tr></thead><tbody>@forelse($rows as $h)<tr><td>{{ optional($h->holiday_date)->format('d/m/Y') }}</td><td>{{ $h->name }}</td><td>{{ $h->is_paid?'Yes':'No' }}</td><td>{{ $h->is_active?'ACTIVE':'INACTIVE' }}</td><td>{{ $h->notes }}</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ route('hr.holidays.edit',$h) }}">Edit</a></td></tr>@empty<tr><td colspan="6" class="text-center text-muted py-4">No holiday data.</td></tr>@endforelse</tbody></table></div></div><div class="mt-3">{{ $rows->links() }}</div>
+@endsection
