@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/bootstrap.php"
          colors="true"
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd">
     <testsuites>
@@ -13,11 +13,12 @@
     </testsuites>
     <php>
         <env name="APP_ENV" value="testing" force="true"/>
-        <env name="APP_CONFIG_CACHE" value="storage/framework/testing-config.php" force="true"/>
         <env name="BCRYPT_ROUNDS" value="4" force="true"/>
         <env name="DB_CONNECTION" value="sqlite" force="true"/>
         <env name="DB_DATABASE" value=":memory:" force="true"/>
         <env name="DB_FOREIGN_KEYS" value="true" force="true"/>
+        <env name="DATABASE_URL" value="" force="true"/>
+        <env name="DB_URL" value="" force="true"/>
         <env name="CACHE_DRIVER" value="array" force="true"/>
         <env name="CACHE_STORE" value="array" force="true"/>
         <env name="MAIL_MAILER" value="array" force="true"/>

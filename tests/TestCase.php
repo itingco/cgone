@@ -8,23 +8,35 @@ use PDO;
 
 abstract class TestCase extends BaseTestCase
 {
-    use CreatesApplication;
+    /**
+     * Laravel 12 already provides createApplication(). Reuse the framework
+     * implementation, then enforce the test connection once more before any
+     * RefreshDatabase hook can open a connection.
+     */
+    public function createApplication()
+    {
+        $app = parent::createApplication();
+
+        $app['config']->set('database.default', 'sqlite');
+        $app['config']->set('database.connections.sqlite.driver', 'sqlite');
+        $app['config']->set('database.connections.sqlite.url', null);
+        $app['config']->set('database.connections.sqlite.database', ':memory:');
+        $app['config']->set('database.connections.sqlite.prefix', '');
+        $app['config']->set('database.connections.sqlite.foreign_key_constraints', true);
+        $app['config']->set('cache.default', 'array');
+        $app['config']->set('queue.default', 'sync');
+        $app['config']->set('session.driver', 'array');
+
+        // If a stale default connection was resolved while the app booted,
+        // discard it. RefreshDatabase will resolve a fresh SQLite connection.
+        $app['db']->purge();
+
+        return $app;
+    }
 
     /**
-     * Clean up stale cached SQLite in-memory PDO transactions before Laravel's
-     * own testing lifecycle runs.
-     *
-     * RefreshDatabase caches the PDO used by SQLite :memory: so the migrated
-     * schema can be reused between tests. If a previous test leaves that PDO
-     * inside an active transaction, the next test can restore the same PDO
-     * into a fresh Laravel Connection whose transaction counter starts at zero.
-     * Laravel then calls beginTransaction() and PDO throws:
-     *
-     *     PDOException: There is already an active transaction
-     *
-     * Running this guard before parent::setUp() is intentional: it executes
-     * before RefreshDatabase's setUp trait hook. This file is loaded only by
-     * the test suite and cannot affect the application's production runtime.
+     * Clean up a stale cached SQLite in-memory PDO before Laravel's own test
+     * lifecycle restores it for the next RefreshDatabase test.
      */
     protected function setUp(): void
     {

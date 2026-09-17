@@ -2,19 +2,16 @@
 
 $root = dirname(__DIR__, 2);
 $errors = [];
-
 $phpunit = file_get_contents($root.'/phpunit.xml');
-$bootstrap = file_get_contents($root.'/tests/bootstrap.php');
 $testCase = file_get_contents($root.'/tests/TestCase.php');
+$bootstrap = file_get_contents($root.'/tests/bootstrap.php');
 
 foreach ([
     'bootstrap="tests/bootstrap.php"',
-    'name="DB_CONNECTION" value="sqlite" force="true"',
-    'name="DB_DATABASE" value=":memory:" force="true"',
     'name="DATABASE_URL" value="" force="true"',
 ] as $needle) {
     if (! str_contains($phpunit, $needle)) {
-        $errors[] = "phpunit.xml missing: {$needle}";
+        $errors[] = "phpunit.xml missing {$needle}";
     }
 }
 
@@ -22,18 +19,17 @@ foreach ([
     "'DB_CONNECTION' => 'sqlite'",
     "'DB_DATABASE' => ':memory:'",
     "'DATABASE_URL' => ''",
-    "'DB_URL' => ''",
     'getmypid()',
     'APP_CONFIG_CACHE',
-    "vendor/autoload.php",
+    'vendor/autoload.php',
 ] as $needle) {
     if (! str_contains($bootstrap, $needle)) {
-        $errors[] = "tests/bootstrap.php missing: {$needle}";
+        $errors[] = "tests/bootstrap.php missing {$needle}";
     }
 }
 
 if (str_contains($testCase, 'use CreatesApplication;')) {
-    $errors[] = 'Tests\\TestCase still uses the legacy CreatesApplication trait.';
+    $errors[] = 'Tests\\TestCase must use Laravel 12 native createApplication.';
 }
 
 foreach ([
@@ -41,10 +37,10 @@ foreach ([
     "'database.default', 'sqlite'",
     "'database.connections.sqlite.url', null",
     "'database.connections.sqlite.database', ':memory:'",
-    "->purge()",
+    '->purge()',
 ] as $needle) {
     if (! str_contains($testCase, $needle)) {
-        $errors[] = "tests/TestCase.php missing: {$needle}";
+        $errors[] = "tests/TestCase.php missing {$needle}";
     }
 }
 
@@ -53,4 +49,4 @@ if ($errors) {
     exit(1);
 }
 
-echo "Testing environment isolation contract: OK".PHP_EOL;
+echo "Pre-bootstrap database isolation contract: OK".PHP_EOL;

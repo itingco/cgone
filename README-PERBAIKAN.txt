@@ -161,3 +161,36 @@ Run after applying V5:
 
 The PHPUnit doc-comment metadata warning is non-fatal. It can be migrated to
 PHPUnit attributes separately once the exact local test file is available.
+
+============================================================
+V6 - TEST BOOTSTRAP ISOLATION (2026-09-17)
+============================================================
+Gejala yang ditangani:
+  SQLSTATE[08006] FATAL database ":memory:" does not exist
+  Connection: pgsql, Database: :memory:
+
+Root cause:
+- DB_DATABASE dari PHPUnit sudah :memory:, tetapi konfigurasi URL/cache lama
+  masih dapat mengubah driver menjadi pgsql.
+- V3-V5 memakai APP_CONFIG_CACHE=storage/framework/testing-config.php. File
+  alternatif itu tidak selalu dibersihkan oleh `php artisan optimize:clear`
+  yang dijalankan di luar proses PHPUnit.
+
+Perbaikan V6:
+- PHPUnit bootstrap dipindah ke tests/bootstrap.php.
+- DB_CONNECTION=sqlite dan DB_DATABASE=:memory: dipasang sebelum Laravel boot.
+- DATABASE_URL dan DB_URL dimask menjadi string kosong agar .env tidak dapat
+  memasukkan URL PostgreSQL kembali.
+- APP_CONFIG_CACHE menggunakan file sementara unik per process/PID, bukan file
+  statis di dalam project.
+- Tests\TestCase memakai createApplication() native Laravel 12 dan memaksa
+  config sqlite sekali lagi sebelum RefreshDatabase berjalan.
+- Guard stale SQLite transaction dari V5 tetap dipertahankan.
+
+Setelah overwrite V6:
+  php artisan optimize:clear
+  composer dump-autoload
+  php tests/Contracts/verify_testing_environment.php
+  php tests/Contracts/verify_prebootstrap_database_isolation.php
+  php artisan test --filter=MenuPermissionTest
+  php artisan test
