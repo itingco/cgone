@@ -6,6 +6,12 @@
         <h4 class="mb-0">{{ $title }}</h4>
         <div class="small text-muted">Posted ledger is read-only. Filter and save your preferred view.</div>
     </div>
+    @if($showSignedQty ?? false)
+        <div class="text-end">
+            <div class="small text-muted">Filtered Qty Summary</div>
+            <div class="fs-5 fw-semibold">{{ number_format((float)($signedQtyTotal ?? 0),4,',','.') }}</div>
+        </div>
+    @endif
 </div>
 
 @include('data-views.panel',['resetUrl'=>url()->current(),'showQuickSearch'=>false])
@@ -17,7 +23,7 @@
                 <tr>
                     <th>ID</th>
                     @foreach($columns as $label)<th>{{ $label }}</th>@endforeach
-                    <th>Action</th>
+                    @if($showSignedQty ?? false)<th class="text-end">Qty</th>@endif
                 </tr>
             </thead>
             <tbody>
@@ -42,14 +48,14 @@
                             @endif
                         </td>
                     @endforeach
-                    <td>
-                        @if($canReverse && !$row->reversal_of_id)
-                            <a class="btn btn-sm btn-outline-danger" href="{{ route('adjustments.create',['ledger_type'=>$type,'source_entry_id'=>$row->id]) }}">Reverse</a>
-                        @endif
-                    </td>
+                    @if($showSignedQty ?? false)
+                        <td class="text-end fw-semibold">
+                            {{ number_format(((float)$row->qty_in - (float)$row->qty_out),4,',','.') }}
+                        </td>
+                    @endif
                 </tr>
             @empty
-                <tr><td colspan="{{ count($columns)+2 }}" class="text-center text-muted">No ledger data</td></tr>
+                <tr><td colspan="{{ count($columns)+1+(($showSignedQty ?? false)?1:0) }}" class="text-center text-muted">No ledger data</td></tr>
             @endforelse
             </tbody>
         </table>

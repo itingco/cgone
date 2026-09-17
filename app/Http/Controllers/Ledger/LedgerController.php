@@ -17,11 +17,10 @@ class LedgerController extends Controller
         $fields = [
             'posting_at' => ['label' => 'Posting', 'type' => 'date', 'column' => 'posting_at'],
             'document_number' => ['label' => 'Document', 'type' => 'text', 'column' => 'document_number'],
+            'document_type' => ['label' => 'Document Type', 'type' => 'text', 'column' => 'document_type'],
             'item_code' => ['label' => 'Item', 'type' => 'lookup', 'relation' => 'item', 'column' => 'code'],
             'location_code' => ['label' => 'Location', 'type' => 'lookup', 'relation' => 'location', 'column' => 'code'],
             'bin_code' => ['label' => 'Bin', 'type' => 'lookup', 'relation' => 'bin', 'column' => 'code'],
-            'qty_in' => ['label' => 'Qty In', 'type' => 'number', 'column' => 'qty_in'],
-            'qty_out' => ['label' => 'Qty Out', 'type' => 'number', 'column' => 'qty_out'],
             'unit_cost' => ['label' => 'Unit Cost', 'type' => 'number', 'column' => 'unit_cost'],
             'amount' => ['label' => 'Amount', 'type' => 'number', 'column' => 'amount'],
             'movement_type' => ['label' => 'Movement', 'type' => 'text', 'column' => 'movement_type'],
@@ -29,12 +28,12 @@ class LedgerController extends Controller
         ];
 
         $defaults = array_intersect_key($fields, array_flip([
-            'posting_at', 'document_number', 'item_code', 'location_code', 'bin_code', 'qty_in', 'qty_out', 'amount',
+            'posting_at', 'document_number', 'document_type', 'item_code', 'location_code', 'bin_code', 'source_module',
         ]));
 
         $query = ItemLedger::query()
             ->select([
-                'id', 'posting_at', 'document_number', 'item_id', 'location_id', 'bin_id',
+                'id', 'posting_at', 'document_number', 'document_type', 'item_id', 'location_id', 'bin_id',
                 'qty_in', 'qty_out', 'unit_cost', 'amount', 'movement_type', 'source_module',
                 'reversal_of_id',
             ])
@@ -44,7 +43,7 @@ class LedgerController extends Controller
                 'bin:id,code',
             ]);
 
-        return $this->dataViewLedger($request, $views, 'ledger.items', 'Item Ledger', 'item', $query, $fields, $defaults);
+        return $this->dataViewLedger($request, $views, 'ledger.items', 'Item Ledger', 'item', $query, $fields, $defaults, true);
     }
 
     public function customers(Request $request, DataViewService $views)
@@ -54,6 +53,7 @@ class LedgerController extends Controller
         $fields = [
             'posting_at' => ['label' => 'Posting', 'type' => 'date', 'column' => 'posting_at'],
             'document_number' => ['label' => 'Document', 'type' => 'text', 'column' => 'document_number'],
+            'document_type' => ['label' => 'Document Type', 'type' => 'text', 'column' => 'document_type'],
             'customer_code' => ['label' => 'Customer', 'type' => 'lookup', 'relation' => 'customer', 'column' => 'code'],
             'debit' => ['label' => 'Debit', 'type' => 'number', 'column' => 'debit'],
             'credit' => ['label' => 'Credit', 'type' => 'number', 'column' => 'credit'],
@@ -63,7 +63,7 @@ class LedgerController extends Controller
 
         $query = CustomerLedger::query()
             ->select([
-                'id', 'posting_at', 'document_number', 'customer_id', 'debit', 'credit',
+                'id', 'posting_at', 'document_number', 'document_type', 'customer_id', 'debit', 'credit',
                 'source_module', 'status', 'reversal_of_id',
             ])
             ->with('customer:id,code');
@@ -78,6 +78,7 @@ class LedgerController extends Controller
         $fields = [
             'posting_at' => ['label' => 'Posting', 'type' => 'date', 'column' => 'posting_at'],
             'document_number' => ['label' => 'Document', 'type' => 'text', 'column' => 'document_number'],
+            'document_type' => ['label' => 'Document Type', 'type' => 'text', 'column' => 'document_type'],
             'vendor_code' => ['label' => 'Vendor', 'type' => 'lookup', 'relation' => 'vendor', 'column' => 'code'],
             'debit' => ['label' => 'Debit', 'type' => 'number', 'column' => 'debit'],
             'credit' => ['label' => 'Credit', 'type' => 'number', 'column' => 'credit'],
@@ -87,7 +88,7 @@ class LedgerController extends Controller
 
         $query = VendorLedger::query()
             ->select([
-                'id', 'posting_at', 'document_number', 'vendor_id', 'debit', 'credit',
+                'id', 'posting_at', 'document_number', 'document_type', 'vendor_id', 'debit', 'credit',
                 'source_module', 'status', 'reversal_of_id',
             ])
             ->with('vendor:id,code');
@@ -102,8 +103,6 @@ class LedgerController extends Controller
         $fields = [
             'posting_at' => ['label' => 'Posting', 'type' => 'date', 'column' => 'posting_at'],
             'document_number' => ['label' => 'Document', 'type' => 'text', 'column' => 'document_number'],
-            'business_unit' => ['label' => 'Business Unit', 'type' => 'lookup', 'relation' => 'businessUnit', 'column' => 'name'],
-            'business_unit_code' => ['label' => 'BU Code', 'type' => 'lookup', 'relation' => 'businessUnit', 'column' => 'code'],
             'source_module' => ['label' => 'Source', 'type' => 'text', 'column' => 'source_module'],
             'document_type' => ['label' => 'Document Type', 'type' => 'text', 'column' => 'document_type'],
             'status' => ['label' => 'Status', 'type' => 'text', 'column' => 'status'],
@@ -112,11 +111,10 @@ class LedgerController extends Controller
         $state = $views->resolve($request, 'ledger.gl', $fields, $fields);
         $query = GlBatch::query()
             ->select([
-                'id', 'business_unit_id', 'posting_at', 'document_number', 'source_module', 'document_type',
+                'id', 'posting_at', 'document_number', 'source_module', 'document_type',
                 'status', 'description', 'reversal_of_id',
             ])
             ->with([
-                'businessUnit:id,code,name',
                 'entries:id,gl_batch_id,account_id,debit,credit,description',
                 'entries.account:id,code,name',
             ]);
@@ -131,7 +129,7 @@ class LedgerController extends Controller
             'dataViewFields' => $fields,
             'dataViewState' => $state,
             'moduleKey' => 'ledger.gl',
-            'canReverse' => $this->canReverse($request),
+            'canReverse' => false,
         ]);
     }
 
@@ -143,10 +141,20 @@ class LedgerController extends Controller
         string $type,
         $query,
         array $fields,
-        array $defaults
+        array $defaults,
+        bool $showSignedQty = false,
     ) {
         $state = $views->resolve($request, $moduleKey, $fields, $defaults);
         $views->apply($query, $fields, $state);
+
+        $signedQtyTotal = null;
+        if ($showSignedQty) {
+            $summaryQuery = clone $query;
+            $signedQtyTotal = (float) $summaryQuery
+                ->reorder()
+                ->selectRaw('COALESCE(SUM(qty_in), 0) - COALESCE(SUM(qty_out), 0) AS signed_qty_total')
+                ->value('signed_qty_total');
+        }
 
         if (empty($state['sort'])) {
             $query->latest('posting_at');
@@ -160,14 +168,9 @@ class LedgerController extends Controller
             'dataViewFields' => $fields,
             'dataViewState' => $state,
             'moduleKey' => $moduleKey,
-            'canReverse' => $this->canReverse($request),
+            'showSignedQty' => $showSignedQty,
+            'signedQtyTotal' => $signedQtyTotal,
         ]);
-    }
-
-    private function canReverse(Request $request): bool
-    {
-        return app(MenuAuthorizationService::class)
-            ->allows($request->user(), 'transactions.adjustment', 'reverse');
     }
 
     private function authorizeMenu(Request $request, string $code): void
